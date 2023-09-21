@@ -4,27 +4,41 @@
  * Required External Modules
  */
 const express = require("express")
-const path = require("path")
+const cors = require('cors')
+
+/**
+ * Required Internal Modules
+ */
+
+
 
 /**
  * App Variables
  */
 const app = express()
-const port = process.env.PORT || "8000"
-
+const port = process.env.PORT || "3000"
 
 /**
  *  App Configuration
  */
+app.use(cors())
+app.use(express.json())
+app.use(express.urlencoded({
+    extended: true
+}))
+
+
+/**
+ *  Middlewares
+ */
+app.use(express.json());
 
 
 
 /**
  * Routes Definitions
  */
-app.get("/", (req, res) => {
-    res.status(200).send("WHATABYTE: Food For Devs")
-})
+app.use('/api', require('./routes/index'))
 
 
 /**
