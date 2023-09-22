@@ -38,7 +38,7 @@ app.use(express.json());
 /**
  * Routes Definitions
  */
-app.use('/api', require('./routes/index'))
+app.use('/', require('./routes/index'))
 
 
 /**
