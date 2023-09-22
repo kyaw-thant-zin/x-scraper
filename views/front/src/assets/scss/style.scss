@@ -1,0 +1,112 @@
+body {
+    background-color: #F5F4EA;
+}
+
+a {
+    text-decoration: none;
+}
+
+.q-pa-none {
+    padding: 0!important;
+}
+
+.p {
+    &-hd {
+        color: rgb(15, 20, 25);
+        background-color: #fff;
+    }
+    &-menu {
+        &-color {
+            color: rgb(15, 20, 25);
+        }
+    }
+    &-bc {
+        color: rgb(15, 20, 25);
+    }
+    &-common {
+        &-btn {
+            color: #fff;
+            background-color: rgb(15, 20, 25);
+        }
+        &-color {
+            color: rgb(29, 155, 240);
+        }
+        &-bg {
+            color: #fff;
+            background-color: rgb(29, 155, 240);
+        }
+    }
+    &-ttl {
+        color: rgb(29, 155, 240);
+    }
+}
+
+.active-sb {
+    color: rgb(29, 155, 240) !important;
+}
+
+.hd {
+    &-logo {
+        height: 22px;
+        padding-top: 5px;
+    }
+}
+
+.page-ttl {
+    color: rgb(29, 155, 240);
+}
+
+.ft {
+    min-height: unset;
+}
+
+.q-dialog--modal {
+    .q-dialog__title {
+        color: #fff;
+        font-size: 16px;
+        background-color: rgb(15, 20, 25);
+        padding-top: 5px;
+        padding-bottom: 5px;
+        margin-bottom: 15px;
+    }
+
+    .q-dialog__message {
+        font-size: 12px;
+    }
+    .q-card__actions {
+        .q-btn {
+            &:first-child {
+                .q-btn__content {
+                    color: rgb(29, 155, 240);
+                }
+            }
+            &:last-child {
+                .q-btn__content {
+                    color: rgb(15, 20, 25);
+                }
+            }
+        }
+    }
+}
+
+.br-left {
+    border-left: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.color-orange {
+    color: rgb(15, 20, 25);
+}
+
+.q-gap-md {
+    gap: 20px;
+}
+
+.required-suffix {
+    font-size: 12px;
+    font-weight: 500;
+    color: #FF0000;
+    letter-spacing: 0.1em;
+    margin-left: 10px;
+    margin-top: 0;
+    display: inline-block;
+}

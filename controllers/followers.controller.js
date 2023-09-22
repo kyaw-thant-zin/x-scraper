@@ -13,15 +13,24 @@ const {SCRAPER} = require('../utils/scraper')
 
 // @desc GET /
 // @route GET /
-// @access Public
+// @access Private
 const index = asyncHnadler( async (req, res) => {
     console.log('this is api index')    
 
     // puppeteer
-    await SCRAPER.puppeteer.getProfile();
+    // await SCRAPER.puppeteer.getProfile();
     // await SCRAPER.playwright.getProfile();
 
-    res.send('Test Scraping')
+    res.json('Test Scraping')
+})
+
+// @desc POST /
+// @route POST /
+// @access Private
+const store = asyncHnadler( async (req, res) => {
+    const data = req.body
+
+    res.json(data)
 })
 
 
@@ -31,4 +40,5 @@ const index = asyncHnadler( async (req, res) => {
 
 module.exports = {
     index,
+    store
 }
