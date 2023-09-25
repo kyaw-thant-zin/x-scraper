@@ -22,6 +22,7 @@ a {
     &-bg {
         max-height: 300px;
         object-fit: cover;
+        overflow: unset;
         @media screen and (max-width: 758px) {
             max-width: 500px;
         }
@@ -30,11 +31,15 @@ a {
     &-img {
         width: 130px;
         left: 16px;
-        bottom: 16px;
+        bottom: -60px;
         @media screen and (max-width: 758px) {
             width: 60px;
             bottom: -20px;
         }
+    }
+
+    &-text {
+        margin-top: 60px;
     }
     
 }

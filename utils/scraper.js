@@ -56,7 +56,17 @@ const BEAUTIFY = {
 const SCRAPER = {
     "puppeteer": {
         "getProfile": async (account) => {
-            const browser = await puppeteer.launch({ headless: false })
+            const browser = await puppeteer.launch({ 
+                // headless: false,
+                defaultViewport: { width: 1366, height: 768 },
+                args: [
+                    '--disable-dev-shm-usage', // Disable shared memory usage
+                    '--no-sandbox', // Disable sandboxing for Linux
+                    '--disable-gpu',
+                    '--disable-features=site-per-process'
+                ],
+                ignoreHTTPSErrors: true
+            })
             const page = await browser.newPage()
         
             await page.setRequestInterception(true)
@@ -65,9 +75,6 @@ const SCRAPER = {
 
             page.on('request', request => {
                 const url = request.url()
-                if (url.includes('https://twitter.com/i/api/graphql/') && url.includes('/UserByScreenName')) {
-                    // console.log('Intercepted Request URL:', url);
-                }
                 request.continue()
             });
         
@@ -91,7 +98,6 @@ const SCRAPER = {
                         }
                     } else {
                         console.error('Response error (status code:', response.status(), ')')
-                        // Handle response error (e.g., log, retry, etc.)
                     }
                 }
             });
@@ -104,91 +110,49 @@ const SCRAPER = {
                 const data = BEAUTIFY.profile(userProfile)
                 return data
             } else {
-                return null
+                return userProfile
             }
         }
     },
     "playwright": {
-        "getProfile": async () => {
+        "getProfile": async (account) => {
             const browser = await firefox.launch(config.projects.find(project => project.name === 'Desktop Firefox').use)
             const context = await browser.newContext()
             const page = await context.newPage()
         
-            // page.on('request', request => {
-            //     console.log('>>', request.method(), request.url())
-            // });
             page.on('response', async (response) => {
                 const url = response.url();
         
                 // Check if the URL matches the desired pattern
                 if (url.includes('https://twitter.com/i/api/graphql/') && url.includes('/UserByScreenName')) {
-                    console.log('Intercepted Request URL:', url);
-                    const data = await response.json()
-                    console.log(data);
+                    // Check the response status
+                    if (response.ok()) {
+                        
+                        try {
+                            const data = await response.json()
+                            if(data?.data?.user?.result?.legacy) {
+                                userProfile = data?.data?.user?.result?.legacy
+                            }
+                            // Process the response data as needed
+                        } catch (error) {
+                            console.error('Error parsing response JSON:', error)
+                        }
+                    } else {
+                        console.error('Response error (status code:', response.status(), ')')
+                    }    
                 }
-                // console.log('<<', response.status(), response.url())
             });
-        
-            const URLS = [
-                'LITMOON_JPN',
-                'KariMen_idol',
-                'Bellflora_beast',
-                'uugirlsofficial',
-                'uug2official'
-            ]
-            await page.goto('https://twitter.com/'+'LITMOON_JPN', { waitUntil: 'load' });
-        
-            // const f = []
-              
-            // for (let i = 0; i < URLS.length; i++) {
-            //     const url = URLS[i];
-            //     await page.goto('https://twitter.com/'+url, { waitUntil: 'load' });
-            //     // following
-            //     const followings = await page.waitForSelector(`a[href="/${url}/following"]`);
-            //     let followingCount = 0
-            //     if (followings) {
-            //         const innerText = await followings.innerText();
-            //         if(innerText != null && innerText != undefined) {
-            //             followingCount = convertToNumber(innerText.replace(' Following', ''))
-            //             console.log(url+' - '+followingCount+' Following')
-            //         }
-            //     } else {
-            //         console.log(`No element found for URL: ${url}`);
-            //     }
-        
-            //     console.log('---------------------------')
-        
-            //     // follower
-            //     let followerCount = 0
-            //     const followers = await page.waitForSelector(`a[href="/${url}/verified_followers"]`);
-            //     if (followers) {
-            //         const innerText = await followers.innerText();
-            //         if(innerText != null && innerText != undefined) {
-            //             followerCount = convertToNumber(innerText.replace(' Followers', ''))
-            //             console.log(url+' - '+followerCount + ' Followers')
-            //         }
-            //     } else {
-            //         console.log(`No element found for URL: ${url}`);
-            //     }
-        
-            //     console.log('---------------------------')
-        
-            //     await page.screenshot({ path: `example${i + 1}.png` });
-        
-            //     f.push({
-            //         'user': url,
-            //         'Following': followingCount,
-            //         'Followers': followerCount
-            //     })
-        
-            // }
-        
-            // // await page.goto('https://twitter.com/LITMOON_JPN')
-            // // await page.screenshot({ path: 'example.png' })
-        
+            await page.goto('https://twitter.com/'+account, { waitUntil: 'load' });
             await browser.close()
-        
-            // const formattedData = JSON.stringify(f, null, 2)
+
+
+            // beautify data
+            if(userProfile != null) {
+                const data = BEAUTIFY.profile(userProfile)
+                return data
+            } else {
+                return userProfile
+            }
         }
     }
 }

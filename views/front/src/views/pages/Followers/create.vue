@@ -20,7 +20,41 @@ const resetForm = () => {
 // create new area
 const onSubmit = async () => {
   await followerStore.handleStore(formData.value)
+
+  if (followerStore._success) {
+    $q.notify({
+      caption: 'アカウントが正常に作成されました。',
+      message: '成功！',
+      type: 'positive',
+      timeout: 1000
+    })
+    followerStore.storeSuccess(false)
+    resetForm()
+    followerStore.router.replace({ name: 'followers.index' })
+  }
+
+  if (followerStore._error) {
+    $q.notify({
+      caption: 'エラーが発生しました。後でもう一度お試しください。',
+      message: 'エラー！',
+      type: 'negative',
+      timeout: 1000
+    })
+    followerStore.storeError(false)
+  }
+
 }
+
+// watch the loading
+watchEffect(() => {
+  // set area rows
+  if (followerStore._loading) {
+    $q.loading.show()
+  } else {
+    $q.loading.hide()
+  }
+
+}, [followerStore._loadi])
 
 </script>
 <template>
@@ -28,7 +62,7 @@ const onSubmit = async () => {
     <div class="q-pa-sm row items-start q-gutter-md">
       <q-breadcrumbs>
         <q-breadcrumbs-el label="ホーム" icon="mdi-home-variant-outline" :to="{ name: 'dashboard' }" />
-        <q-breadcrumbs-el label="フォロワー"  :to="{ name: 'followers.index' }" />
+        <q-breadcrumbs-el label="フォロワー" :to="{ name: 'followers.index' }" />
       </q-breadcrumbs>
     </div>
     <div class="full-width row wrap justify-start items-start content-start">
@@ -54,9 +88,10 @@ const onSubmit = async () => {
                         <label class="">アカウント</label>
                       </div>
                       <div class="col-12 col-sm-12 col-md-8 col-lg-8 form-input">
-                        <q-input name="account" outlined class="common-input-text" v-model="formData.account" lazy-rules :rules="[
-                          val => !!val.replace(/\s/g, '') || 'フィールドは必須項目です',
-                        ]" />
+                        <q-input name="account" outlined class="common-input-text" v-model="formData.account" lazy-rules
+                          :rules="[
+                            val => !!val.replace(/\s/g, '') || 'フィールドは必須項目です',
+                          ]" />
                       </div>
                     </div>
                     <div class="row items-top q-mt-lg">

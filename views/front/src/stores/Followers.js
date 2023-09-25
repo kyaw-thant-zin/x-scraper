@@ -78,18 +78,7 @@ export const useFollowerStore = defineStore('follower', () => {
     const handleStore = async (formData) => {
         storeLoading(true)
         const response = await API.followers.store(formData)
-        if(response) {
-            storeSuccess(true)
-        } else {
-            storeError(true)
-        }
-        storeLoading(false)
-    }
-
-    const handelUpdate = async (id, formData) => {
-        storeLoading(true)
-        const response = await API.followers.update(id, formData)
-        if(response) {
+        if(response?.success) {
             storeSuccess(true)
         } else {
             storeError(true)
@@ -100,7 +89,7 @@ export const useFollowerStore = defineStore('follower', () => {
     const handleDestroy = async (id) => {
         storeLoading(true)
         const response = await API.followers.destroy(id)
-        if(response) {
+        if(response?.success) {
             storeSuccess(true)
         } else {
             storeError(true)
@@ -118,7 +107,6 @@ export const useFollowerStore = defineStore('follower', () => {
         handleGetAll,
         handleGet,
         handleStore,
-        handelUpdate,
         handleDestroy,
     }
 

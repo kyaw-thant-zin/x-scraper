@@ -57,7 +57,7 @@ const handleChildMenuClick = (childPath) => {
       <q-toolbar>
         <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
         <q-toolbar-title>
-          Title
+          X Scraper
         </q-toolbar-title>
         <q-space />
         <q-btn size="md" flat class="q-ml-md" @click="signout()" icon="mdi-logout-variant"></q-btn>

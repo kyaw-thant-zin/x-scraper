@@ -6,7 +6,7 @@ module.exports = {
       name: 'Desktop Firefox',
       use: {
         ...devices['Desktop Firefox'],
-        headless: false
+        headless: true
       },
     },
     {

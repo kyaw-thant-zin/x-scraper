@@ -59,7 +59,7 @@ onMounted( async () => {
                                         <img class="absolute-bottom-left q-circle profile-img" :src="profile.img">
                                     </q-img>
                                 </div>
-                                <div class="col-12 q-px-md q-mt-lg">
+                                <div class="col-12 q-px-md profile-text">
                                     <div class="text-h6 text-weight-bolder">{{ profile.name }}</div>
                                     <p class="text-caption">@{{ profile.account }}</p>
                                     <p class="text-body2">{{ profile.desc }}</p>

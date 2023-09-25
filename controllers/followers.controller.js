@@ -46,7 +46,7 @@ const store = asyncHnadler( async (req, res) => {
     const data = req.body
     let userProfile = null
     if((data?.account && data.account != null) && (data?.userId && data.userId != null)) {
-        userProfile = await SCRAPER.puppeteer.getProfile(data.account)
+        userProfile = await SCRAPER.playwright.getProfile(data.account)
         if(userProfile != null) {
             // store the data
             const followerData = {
@@ -63,20 +63,23 @@ const store = asyncHnadler( async (req, res) => {
                 description: userProfile.description,
                 tt_created_at: userProfile.created_at
             }
+
+            console.log(followerData)
+
             const follower = await Followers.create(followerData).then(followers => {
                 return followers.get({ plain: true })
             })
 
             if(follower) {
-                res.status(201).send({success: {
-                    stored: `${data.account} was successfully scraped!`
-                }})
+                res.status(201).send({success: true})
             } else {
-                res.json(followerData)
+                res.json({success: false})
             }
+        } else {
+            res.json({success: false})
         }
     } else {
-        res.json(userProfile)
+        res.json({success: false})
     }
     
 })
@@ -86,7 +89,6 @@ const store = asyncHnadler( async (req, res) => {
 // @access Private
 const detail = asyncHnadler( async (req, res) => {
     const data = req.params
-    console.log(data)
     if(data?.id && data.id != null) {
         let follower = await Followers.findOne({
             where: {
@@ -100,11 +102,35 @@ const detail = asyncHnadler( async (req, res) => {
 
 })
 
+// @desc DELETE followers destroy
+// @route DELETE /followers/:id/destroy
+// @access Private
+const destroy = asyncHnadler( async (req, res) => {
+    const data = req.params
+    if(data?.id && data.id != null) {
+        const result = await Followers.destroy({
+            where: {
+                id: data.id
+            }
+        })
+    
+        if(result) {
+            res.status(201).send({success: true})
+        }else {
+            res.status(400).send({ success: false })
+            throw new Error('Invalid id')
+        }
+    } else {
+        res.status(400).send({ success: false })
+            throw new Error('Invalid id')
+    }
 
+})
 
 
 module.exports = {
     index,
     store,
-    detail
+    detail,
+    destroy
 }

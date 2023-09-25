@@ -1,7 +1,7 @@
 <script setup>
 import { APP } from '@/config.js'
 import { useQuasar } from 'quasar'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watchEffect } from 'vue'
 import { useFollowerStore } from '@/stores/Followers'
 
 const $q = useQuasar()
@@ -30,18 +30,62 @@ const visibileColumns = ['account', 'followers', 'following', 'tt_created_at', '
 const rows = ref([])
 const pagination = ref({
     page: 1,
-    rowsPerPage: 1
+    rowsPerPage: 10
 })
 const changePagination = (newPagination) => {
     const pageNumber = newPagination.page
     pagination.value.page = pageNumber
 }
 
-
 // Fetch store
 onMounted(async () => {
     rows.value = await followerStore.handleGetAll()
 })
+
+// watch the loading
+watchEffect(() => {
+    // set area rows
+    if(followerStore._loading) {
+        $q.loading.show()
+    } else {
+        $q.loading.hide()
+    }
+
+}, [followerStore._loading])
+
+function showConfirmDialog(row) {
+    $q.dialog({
+      title: `消去してもよろしいですか「${row.account}」?`,
+      message: 'このアカウントは間もなく削除されます。 この操作は元に戻すことができません。',
+      cancel: true,
+      persistent: true,
+      html: true,
+    }).onOk( async () => {
+        await followerStore.handleDestroy(row.id)
+        if(followerStore._success) {
+            rows.value = await followerStore.handleGetAll()
+            $q.notify({
+                caption: 'アカウントは正常に削除されました。',
+                message: '成功！',
+                type: 'positive',
+                timeout: 1000
+            })
+            followerStore.storeSuccess(false)
+        }
+
+        if(followerStore._error) {
+            $q.notify({
+                caption: 'エラーが発生しました。後でもう一度お試しください。',
+                message: 'エラー！',
+                type: 'negative',
+                timeout: 1000
+            })
+            followerStore.storeError(false)
+        }
+    })
+}
+
+console.log('here')
 
 </script>
 <template>
@@ -65,7 +109,10 @@ onMounted(async () => {
                     <q-card class="common-card">
                         <q-card-section class="row justify-between items-center q-py-md  q-px-lg">
                             <div class="common-card-ttl">フォロワー一覧</div>
-                            <q-btn class="shadow-3 p-common-btn" label="新規作成" :to="{ name: 'followers.create' }" no-caps />
+                            <div class="row">
+                                <q-btn class="shadow-3 p-common-btn q-mr-md" icon="mdi-refresh" :to="{ name: 'followers.create' }" no-caps />
+                                <q-btn class="shadow-3 p-common-btn" label="新規作成" :to="{ name: 'followers.create' }" no-caps />
+                            </div>
                         </q-card-section>
                         <q-card-section class="q-px-none">
                             <q-table class="index-table no-shadow" :filter="filter" :rows="rows" :columns="columns"
