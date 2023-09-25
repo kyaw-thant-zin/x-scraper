@@ -56,8 +56,9 @@ export const API = {
         }
     },
     "followers": {
-        "get": (id) => {
-
+        "get": async (id) => {
+            const response = await instance.get(apiURL+'/followers/'+id+'/detail', { headers: headers })
+            return response.data
         },
         "getAll": async () => {
             const response = await instance.get(apiURL+'/followers', { headers: headers })

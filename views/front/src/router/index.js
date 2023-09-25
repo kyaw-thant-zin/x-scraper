@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '@/views/pages/Dashboard/index.vue'
 import Followers from '@/views/pages/Followers/index.vue'
 import FollowersCreate from '@/views/pages/Followers/create.vue'
+import FollowersDetail from '@/views/pages/Followers/detail.vue'
 
 
 const router = createRouter({
@@ -18,15 +19,28 @@ const router = createRouter({
         {
             path: '/followers',
             name: 'followers',
-            component: Followers,
-            meta: { requiresAuth: true, authLayout: true }
+            children: [
+                {
+                    path: '',
+                    name: 'followers.index',
+                    component: Followers,
+                    meta: { requiresAuth: true, authLayout: true }
+                },
+                {
+                    path: 'create',
+                    name: 'followers.create',
+                    component: FollowersCreate,
+                    meta: { requiresAuth: true, authLayout: true }
+                },
+                {
+                    path: ':id/detail',
+                    name: 'followers.detail',
+                    component: FollowersDetail,
+                    meta: { requiresAuth: true, authLayout: true }
+                },
+            ]
         },
-        {
-            path: '/followers/create',
-            name: 'followers.create',
-            component: FollowersCreate,
-            meta: { requiresAuth: true, authLayout: true }
-        },
+        
         // {
         //     path: '/:catchAll(.*)',
         //     name: 'notfound',

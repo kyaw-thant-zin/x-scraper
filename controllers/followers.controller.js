@@ -10,42 +10,101 @@ const asyncHnadler = require('express-async-handler')
  * Required Internal Modules
  */
 const {SCRAPER} = require('../utils/scraper')
+const db = require('../models/index')
+
+
+const Followers = db.followers
+
 
 // @desc GET /
 // @route GET /
 // @access Private
 const index = asyncHnadler( async (req, res) => {
-    console.log('this is api index')    
+    // const {userId} = req.body
 
-    // puppeteer
-    // await SCRAPER.puppeteer.getProfile();
-    // await SCRAPER.playwright.getProfile();
+    // if(!userId) {
+    //     res.status(400).send({ error: { required: 'Please add all fields' } })
+    //     throw new Error('Please add all fields')
+    // }
+    const userId = 1
+    let followers = await Followers.findAll({ 
+        where: {
+            userId: userId
+        },
+        order: [
+            ['id', 'DESC'],
+        ],
+    })
 
-    res.json('Test Scraping')
+    res.json(followers)
 })
 
-// @desc POST /
-// @route POST /
+// @desc POST store followers
+// @route POST /followers/store
 // @access Private
 const store = asyncHnadler( async (req, res) => {
     const data = req.body
     let userProfile = null
-    if(data?.account && data.account != null) {
+    if((data?.account && data.account != null) && (data?.userId && data.userId != null)) {
         userProfile = await SCRAPER.puppeteer.getProfile(data.account)
         if(userProfile != null) {
             // store the data
-            
+            const followerData = {
+                userId: data.userId,
+                account: data.account,
+                following: userProfile.followings_count,
+                followers: userProfile.followers_count,
+                friends: userProfile.favourites_count,
+                media_count: userProfile.media_count,
+                name: userProfile.name,
+                profile_banner_url: userProfile.profile_banner_url,
+                profile_image_url_https: userProfile.profile_image_url_https,
+                statuses_count: userProfile.statuses_count,
+                description: userProfile.description,
+                tt_created_at: userProfile.created_at
+            }
+            const follower = await Followers.create(followerData).then(followers => {
+                return followers.get({ plain: true })
+            })
+
+            if(follower) {
+                res.status(201).send({success: {
+                    stored: `${data.account} was successfully scraped!`
+                }})
+            } else {
+                res.json(followerData)
+            }
         }
+    } else {
+        res.json(userProfile)
     }
-    res.json(userProfile)
+    
 })
 
+// @desc GET followers detail
+// @route GET /followers/:id/detail
+// @access Private
+const detail = asyncHnadler( async (req, res) => {
+    const data = req.params
+    console.log(data)
+    if(data?.id && data.id != null) {
+        let follower = await Followers.findOne({
+            where: {
+                id: data.id,
+            }
+        })
+        res.send(follower)
+    } else {
+        res.send(null)
+    }
 
+})
 
 
 
 
 module.exports = {
     index,
-    store
+    store,
+    detail
 }

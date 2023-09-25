@@ -12,7 +12,7 @@ const sequelize = new Sequelize(
         collate: 'utf8mb4_unicode_ci',
         dialectOptions: {
             useUTC: false,
-            timezone: process.env.DB_TIMEZONE,
+            timezone:  dbConfig.TIMEZON,
         },
         timezone: dbConfig.TIMEZONE,
         operatorsAliases: 'false',

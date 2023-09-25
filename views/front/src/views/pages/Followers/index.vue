@@ -1,9 +1,11 @@
 <script setup>
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import { ref, watchEffect } from 'vue'
+import { APP } from '@/config.js'
+import { useQuasar } from 'quasar'
+import { ref, onMounted } from 'vue'
+import { useFollowerStore } from '@/stores/Followers'
 
-dayjs.extend(relativeTime)
+const $q = useQuasar()
+const followerStore = useFollowerStore()
 
 const filter = ref('')
 const columns = [
@@ -19,6 +21,7 @@ const columns = [
     },
     { name: 'followers', required: true, align: 'center', label: 'フォロワー', field: 'followers', sortable: true },
     { name: 'following', required: true, align: 'center', label: 'フォロー中', field: 'following', sortable: true },
+    { name: 'media', required: true, align: 'center', label: 'メディア数', field: 'media', sortable: true },
     { name: 'tt_created_at', required: true, align: 'center', label: '作成日', field: 'tt_created_at', sortable: true },
     { name: 'last_detection', required: true, align: 'center', label: '最後の検出', field: 'last_detection', sortable: true },
     { name: 'action', align: 'center', label: 'アクション', field: 'action' },
@@ -33,6 +36,12 @@ const changePagination = (newPagination) => {
     const pageNumber = newPagination.page
     pagination.value.page = pageNumber
 }
+
+
+// Fetch store
+onMounted(async () => {
+    rows.value = await followerStore.handleGetAll()
+})
 
 </script>
 <template>
@@ -62,7 +71,20 @@ const changePagination = (newPagination) => {
                             <q-table class="index-table no-shadow" :filter="filter" :rows="rows" :columns="columns"
                                 row-key="name" :visible-columns="visibileColumns" :pagination="pagination"
                                 @update:pagination="changePagination">
-
+                                <template v-slot:body-cell-action="props">
+                                    <q-td :props="props">
+                                        <div class="row no-wrap justify-center items-center q-gutter-sm">
+                                            <div>
+                                                <router-link :to="{ name: 'followers.detail', params: { id: APP.encryptID(props.row.id) } }">
+                                                  <q-btn size="sm" padding="sm" round class="p-common-bg" icon="mdi-note-edit-outline"/>
+                                                </router-link>
+                                            </div>
+                                            <div>
+                                                <q-btn @click="showConfirmDialog(props.row)" size="sm" padding="sm" round class="p-common-btn" icon="mdi-trash-can-outline" />
+                                            </div>
+                                        </div>
+                                    </q-td>
+                                  </template>
                             </q-table>
                         </q-card-section>
                     </q-card>

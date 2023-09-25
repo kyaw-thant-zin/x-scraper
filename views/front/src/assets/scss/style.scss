@@ -10,6 +10,35 @@ a {
     padding: 0!important;
 }
 
+.q-circle {
+    border-radius: 50%;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    -ms-border-radius: 50%;
+    -o-border-radius: 50%;
+}
+
+.profile {
+    &-bg {
+        max-height: 300px;
+        object-fit: cover;
+        @media screen and (max-width: 758px) {
+            max-width: 500px;
+        }
+    }
+
+    &-img {
+        width: 130px;
+        left: 16px;
+        bottom: 16px;
+        @media screen and (max-width: 758px) {
+            width: 60px;
+            bottom: -20px;
+        }
+    }
+    
+}
+
 .p {
     &-hd {
         color: rgb(15, 20, 25);

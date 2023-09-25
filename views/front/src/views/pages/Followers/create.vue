@@ -8,7 +8,8 @@ const followerStore = useFollowerStore()
 
 const settingForm = ref(null)
 const formData = ref({
-  account: ''
+  account: '',
+  userId: 1
 })
 
 const resetForm = () => {
@@ -26,8 +27,8 @@ const onSubmit = async () => {
   <div class="full-width  q-mb-xl">
     <div class="q-pa-sm row items-start q-gutter-md">
       <q-breadcrumbs>
-        <q-breadcrumbs-el label="ホーム" icon="mdi-home-variant-outline" :to="{ name: 'admin.dashboard' }" />
-        <q-breadcrumbs-el label="エリア" />
+        <q-breadcrumbs-el label="ホーム" icon="mdi-home-variant-outline" :to="{ name: 'dashboard' }" />
+        <q-breadcrumbs-el label="フォロワー"  :to="{ name: 'followers.index' }" />
       </q-breadcrumbs>
     </div>
     <div class="full-width row wrap justify-start items-start content-start">
