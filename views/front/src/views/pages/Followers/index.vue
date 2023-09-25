@@ -8,7 +8,6 @@ dayjs.extend(relativeTime)
 const filter = ref('')
 const columns = [
     { name: 'id', required: false, label: 'ID', sortable: false },
-    { name: 'row', required: true, align: 'center', label: '#', field: 'row', sortable: true },
     {
         name: 'account',
         required: true,
@@ -18,12 +17,13 @@ const columns = [
         format: val => `${val}`,
         sortable: true
     },
-    { name: 'following', required: true, align: 'center', label: 'フォロー中', field: 'following', sortable: true },
     { name: 'followers', required: true, align: 'center', label: 'フォロワー', field: 'followers', sortable: true },
-    { name: 'date', required: true, align: 'center', label: '日付', field: 'date', sortable: true },
+    { name: 'following', required: true, align: 'center', label: 'フォロー中', field: 'following', sortable: true },
+    { name: 'tt_created_at', required: true, align: 'center', label: '作成日', field: 'tt_created_at', sortable: true },
+    { name: 'last_detection', required: true, align: 'center', label: '最後の検出', field: 'last_detection', sortable: true },
     { name: 'action', align: 'center', label: 'アクション', field: 'action' },
 ]
-const visibileColumns = ['row', 'company', 'action']
+const visibileColumns = ['account', 'followers', 'following', 'tt_created_at', 'last_detection', 'action']
 const rows = ref([])
 const pagination = ref({
     page: 1,

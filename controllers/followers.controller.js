@@ -29,8 +29,15 @@ const index = asyncHnadler( async (req, res) => {
 // @access Private
 const store = asyncHnadler( async (req, res) => {
     const data = req.body
-
-    res.json(data)
+    let userProfile = null
+    if(data?.account && data.account != null) {
+        userProfile = await SCRAPER.puppeteer.getProfile(data.account)
+        if(userProfile != null) {
+            // store the data
+            
+        }
+    }
+    res.json(userProfile)
 })
 
 
