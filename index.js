@@ -4,7 +4,11 @@
  * Required External Modules
  */
 const express = require("express")
+const db = require('./models')
 const cors = require('cors')
+const dotenv = require('dotenv').config({
+    path: __dirname + '/.env'
+})
 
 /**
  * Required Internal Modules
