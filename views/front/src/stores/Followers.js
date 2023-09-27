@@ -97,6 +97,18 @@ export const useFollowerStore = defineStore('follower', () => {
         storeLoading(false)
     }
 
+    const handleRefresh = async () => {
+        storeLoading(true)
+        const response = await API.followers.refresh()
+        console.log(response)
+        if(response?.success) {
+            storeSuccess(true)
+        } else {
+            storeError(true)
+        }
+        storeLoading(false)
+    }
+
     return {
         _followers,
         _success,
@@ -108,6 +120,7 @@ export const useFollowerStore = defineStore('follower', () => {
         handleGet,
         handleStore,
         handleDestroy,
+        handleRefresh
     }
 
 })

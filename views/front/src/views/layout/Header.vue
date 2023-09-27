@@ -2,14 +2,18 @@
 import 'quasar/dist/quasar.css'
 import { ref, watchEffect, onBeforeMount } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/Auth'
+
+
+const authStore = useAuthStore()
 
 // sidebar nav menu list
 const menuList = [
-  {
-    label: 'ホーム',
-    path: '/dashboard',
-    icon: 'mdi-home-variant-outline',
-  },
+  // {
+  //   label: 'ホーム',
+  //   path: '/dashboard',
+  //   icon: 'mdi-home-variant-outline',
+  // },
   {
     label: 'フォロワー',
     path: '/followers',
@@ -48,6 +52,13 @@ const toggleLeftDrawer = () => {
 const handleChildMenuClick = (childPath) => {
   activeLink.value = childPath
   setChildMenuActive(childPath)
+}
+
+const signout = async () => {
+  const res = await authStore.handleSignOut()
+  if(res) {
+    authStore.router.replace({ name: 'signinhome' })
+  }
 }
 
 </script>

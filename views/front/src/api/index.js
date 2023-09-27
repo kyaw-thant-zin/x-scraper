@@ -29,30 +29,19 @@ export const API = {
     "auth": {
         "check": async() => {
             try {
-                const response = await instance.get(apiURL+'/check-auth',  {headers: headers})
+                const response = await instance.post(apiURL+'/check-auth',  {headers: headers})
                 return response.data
             } catch (error) {
                 return error.response
             }
         },
         "signin": async (formData) => {
-            try {
-                const response = await instance.get('/sanctum/csrf-cookie')
-                if(response.status == 204) {
-                    const response = await instance.post(apiURL+'/cp/sign-in', formData, {headers: headers})
-                    return response.data
-                }
-            } catch (error) {
-                return error.response
-            }
+            const response = await instance.post(apiURL+'/sign-in', formData, {headers: headers})
+            return response.data
         },
         "signout": async (id) => {
-            try {
-                const response = await instance.post(apiURL+'/sign-out', {'id': id}, {headers: headers})
-                return response
-            } catch (error) {
-                return error.response
-            }
+            const response = await instance.post(apiURL+'/sign-out', {headers: headers})
+            return response
         }
     },
     "followers": {
@@ -71,7 +60,11 @@ export const API = {
         "destroy": async (id) => {
             const response = await instance.delete(apiURL+'/followers/'+id+'/destroy', {headers: headers})
             return response.data
-        }
+        },
+        "refresh": async () => {
+            const response = await instance.post(apiURL+'/followers/refresh', { headers: headers })
+            return response.data
+        },
     },
 }
 

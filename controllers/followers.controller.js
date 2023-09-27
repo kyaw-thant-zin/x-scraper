@@ -127,10 +127,20 @@ const destroy = asyncHnadler( async (req, res) => {
 
 })
 
+// @desc POST refresh all accounts
+// @route POST /followers/refresh
+// @access Private
+const refresh = asyncHnadler( async (req, res) => {
+
+    // get the data and do not close browser but update the data first and then fetch the new 
+
+})
+
 
 module.exports = {
     index,
     store,
     detail,
-    destroy
+    destroy,
+    refresh
 }

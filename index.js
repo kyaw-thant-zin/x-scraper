@@ -6,6 +6,7 @@
 const express = require("express")
 const db = require('./models')
 const cors = require('cors')
+const cookieParser = require('cookie-parser')
 const dotenv = require('dotenv').config({
     path: __dirname + '/.env'
 })
@@ -36,6 +37,7 @@ app.use(express.json())
 app.use(express.urlencoded({
     extended: true
 }))
+app.use(cookieParser())
 
 
 /**

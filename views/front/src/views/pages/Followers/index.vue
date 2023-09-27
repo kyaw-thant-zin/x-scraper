@@ -85,7 +85,9 @@ function showConfirmDialog(row) {
     })
 }
 
-console.log('here')
+const refreshAll = async () => {
+    await followerStore.handleRefresh()
+}
 
 </script>
 <template>
@@ -110,7 +112,7 @@ console.log('here')
                         <q-card-section class="row justify-between items-center q-py-md  q-px-lg">
                             <div class="common-card-ttl">フォロワー一覧</div>
                             <div class="row">
-                                <q-btn class="shadow-3 p-common-btn q-mr-md" icon="mdi-refresh" :to="{ name: 'followers.create' }" no-caps />
+                                <q-btn class="shadow-3 p-common-btn q-mr-md" icon="mdi-refresh" @click="refreshAll" no-caps />
                                 <q-btn class="shadow-3 p-common-btn" label="新規作成" :to="{ name: 'followers.create' }" no-caps />
                             </div>
                         </q-card-section>
