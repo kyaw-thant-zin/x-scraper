@@ -10,9 +10,10 @@ module.exports = {
       },
     },
     {
-      name: 'Desktop Firefox',
+      name: 'Desktop Firefox Refresh',
       use: {
         ...devices['Desktop Firefox'],
+        headless: true
       },
     },
   ],

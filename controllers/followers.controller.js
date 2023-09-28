@@ -134,6 +134,63 @@ const refresh = asyncHnadler( async (req, res) => {
 
     // get the data and do not close browser but update the data first and then fetch the new 
 
+    const io = global.io // Access io as a global variable
+
+    // get all accounts
+    const userId = 1
+    let followers = await Followers.findAll({ 
+        where: {
+            userId: userId
+        },
+        order: [
+            ['id', 'DESC'],
+        ],
+    })
+
+    let success = true
+
+    for (let index = 0; index < followers.length; index++) {
+        
+        // get account data
+        const follower = followers[index]
+        const account = follower.account
+        const userProfile = await SCRAPER.puppeteer.getProfileRefresh(account, followers.length, index)
+        if(userProfile != null) {
+
+            // update the data
+            const followerData = {
+                following: userProfile.followings_count,
+                followers: userProfile.followers_count,
+                friends: userProfile.favourites_count,
+                media_count: userProfile.media_count,
+                name: userProfile.name,
+                profile_banner_url: userProfile.profile_banner_url,
+                profile_image_url_https: userProfile.profile_image_url_https,
+                statuses_count: userProfile.statuses_count,
+                description: userProfile.description,
+            }
+
+            const f = await Followers.update(followerData, {
+                where: { id: follower.id },
+            })
+
+            const data = await Followers.findOne({
+                where: {
+                    id: follower.id,
+                }
+            })
+
+            if(f) {
+                io.emit('refresh-account', { updated: true, data: data})
+            }
+        } else {
+            success = false
+        }
+    }
+
+    console.log('all done')
+    res.status(201).send({success: success})
+
 })
 
 

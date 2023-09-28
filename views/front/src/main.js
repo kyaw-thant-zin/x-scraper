@@ -22,21 +22,27 @@ import 'quasar/src/css/index.sass'
 //  Main SCSS link
 import '@/assets/scss/style.scss'
 
+
+import { useFollowerStore } from '@/stores/Followers'
+
 const pinia = createPinia()
 pinia.use(({ store }) => {
     store.router = markRaw(router)
   },
 )
 
-createApp(App)
-  .use(router)
-  .use(pinia)
-  .use(Quasar, {
+const app = createApp(App)
+app.use(router)
+app.use(pinia)
+app.use(Quasar, {
     plugins: {
       Loading,
       Notify,
       Dialog
     }, // import Quasar plugins and add here
-  })
-  .mount('#app')
+})
+
+useFollowerStore().handleRefreshProcess()
+
+app.mount('#app')
 

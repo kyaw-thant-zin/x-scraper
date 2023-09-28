@@ -4,6 +4,10 @@
  * Required External Modules
  */
 const express = require("express")
+const http = require('http')
+const socketIo = require('socket.io')
+
+
 const db = require('./models')
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
@@ -21,6 +25,26 @@ const dotenv = require('dotenv').config({
  * App Variables
  */
 const app = express()
+const server = http.createServer(app)
+const io = socketIo(server, {
+    cors: {
+      origin: 'http://localhost:3000', // Allow requests from this origin
+      methods: ['GET', 'POST'],
+    },
+})
+
+// Listen for client connections
+io.on('connection', (socket) => {
+    console.log('A client connected:', socket.id);
+  
+    socket.on('disconnect', () => {
+      console.log('Client disconnected:', socket.id);
+    });
+})
+
+// Set io as a global variable
+global.io = io
+
 const port = process.env.PORT || "8000"
 
 /**
@@ -56,6 +80,6 @@ app.use('/api', require('./routes/index'))
 /**
  * Server Activation
  */
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Listening to requests on http://localhost:${port}`)
 })

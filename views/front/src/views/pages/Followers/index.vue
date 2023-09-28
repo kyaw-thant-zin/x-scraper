@@ -1,7 +1,7 @@
 <script setup>
 import { APP } from '@/config.js'
 import { useQuasar } from 'quasar'
-import { ref, onMounted, watchEffect } from 'vue'
+import { ref, onMounted, watchEffect, watch } from 'vue'
 import { useFollowerStore } from '@/stores/Followers'
 
 const $q = useQuasar()
@@ -10,6 +10,7 @@ const followerStore = useFollowerStore()
 const filter = ref('')
 const columns = [
     { name: 'id', required: false, label: 'ID', sortable: false },
+    { name: 'refresh', required: false, align: 'center', label: '', field: 'refresh', sortable: false },
     {
         name: 'account',
         required: true,
@@ -26,7 +27,7 @@ const columns = [
     { name: 'last_detection', required: true, align: 'center', label: '最後の検出', field: 'last_detection', sortable: true },
     { name: 'action', align: 'center', label: 'アクション', field: 'action' },
 ]
-const visibileColumns = ['account', 'followers', 'following', 'tt_created_at', 'last_detection', 'action']
+const visibileColumns = ['refresh', 'account', 'followers', 'following', 'tt_created_at', 'last_detection', 'action']
 const rows = ref([])
 const pagination = ref({
     page: 1,
@@ -42,27 +43,17 @@ onMounted(async () => {
     rows.value = await followerStore.handleGetAll()
 })
 
-// watch the loading
-watchEffect(() => {
-    // set area rows
-    if(followerStore._loading) {
-        $q.loading.show()
-    } else {
-        $q.loading.hide()
-    }
-
-}, [followerStore._loading])
 
 function showConfirmDialog(row) {
     $q.dialog({
-      title: `消去してもよろしいですか「${row.account}」?`,
-      message: 'このアカウントは間もなく削除されます。 この操作は元に戻すことができません。',
-      cancel: true,
-      persistent: true,
-      html: true,
-    }).onOk( async () => {
+        title: `消去してもよろしいですか「${row.account}」?`,
+        message: 'このアカウントは間もなく削除されます。 この操作は元に戻すことができません。',
+        cancel: true,
+        persistent: true,
+        html: true,
+    }).onOk(async () => {
         await followerStore.handleDestroy(row.id)
-        if(followerStore._success) {
+        if (followerStore._success) {
             rows.value = await followerStore.handleGetAll()
             $q.notify({
                 caption: 'アカウントは正常に削除されました。',
@@ -73,7 +64,7 @@ function showConfirmDialog(row) {
             followerStore.storeSuccess(false)
         }
 
-        if(followerStore._error) {
+        if (followerStore._error) {
             $q.notify({
                 caption: 'エラーが発生しました。後でもう一度お試しください。',
                 message: 'エラー！',
@@ -85,9 +76,78 @@ function showConfirmDialog(row) {
     })
 }
 
+
 const refreshAll = async () => {
+
+    // set table disable
+    if(rows.value && rows.value.length > 0) {
+        rows.value.forEach(item => {
+            item.refresh = true;
+        })
+    }
+
     await followerStore.handleRefresh()
+
+    setTimeout( async () => {
+
+        // set table disable
+        if(rows.value && rows.value.length > 0) {
+            rows.value.forEach(item => {
+                item.refresh = false;
+            })
+        }
+        if (followerStore._success) {
+            $q.notify({
+                caption: 'アカウントは正常に削除されました。',
+                message: '成功！',
+                type: 'positive',
+                timeout: 1000
+            })
+            followerStore.storeSuccess(false)
+        }
+
+        if (followerStore._error) {
+            $q.notify({
+                caption: 'エラーが発生しました。後でもう一度お試しください。',
+                message: 'エラー！',
+                type: 'negative',
+                timeout: 1000
+            })
+            followerStore.storeError(false)
+        }
+    }, 2000)
+
 }
+
+// watch the refresh
+watch(
+    () => followerStore._follower,
+    (newValue, oldValue) => {
+        if(newValue != null) {
+            const updatedFollower = newValue
+            const indexToUpdate = rows.value.findIndex(row => row.id === updatedFollower.id)
+            if (indexToUpdate !== -1) {
+                rows.value[indexToUpdate] = {
+                    ...rows[indexToUpdate],  // Preserve other properties
+                    ...updatedFollower       // Update with new properties
+                }
+            }
+        }
+    },
+    { deep: true }
+)
+
+
+// watch the loading
+watchEffect(() => {
+    // set area rows
+    if (followerStore._loading) {
+        $q.loading.show()
+    } else {
+        $q.loading.hide()
+    }
+
+}, [followerStore._loading])
 
 </script>
 <template>
@@ -112,28 +172,86 @@ const refreshAll = async () => {
                         <q-card-section class="row justify-between items-center q-py-md  q-px-lg">
                             <div class="common-card-ttl">フォロワー一覧</div>
                             <div class="row">
-                                <q-btn class="shadow-3 p-common-btn q-mr-md" icon="mdi-refresh" @click="refreshAll" no-caps />
-                                <q-btn class="shadow-3 p-common-btn" label="新規作成" :to="{ name: 'followers.create' }" no-caps />
+                                <q-btn class="shadow-3 p-common-btn q-mr-md" icon="mdi-refresh" @click="refreshAll"
+                                    no-caps />
+                                <q-btn class="shadow-3 p-common-btn" label="新規作成" :to="{ name: 'followers.create' }"
+                                    no-caps />
                             </div>
                         </q-card-section>
                         <q-card-section class="q-px-none">
-                            <q-table class="index-table no-shadow" :filter="filter" :rows="rows" :columns="columns"
-                                row-key="name" :visible-columns="visibileColumns" :pagination="pagination"
-                                @update:pagination="changePagination">
+                            <q-table class="index-table no-shadow follower-tbl" :filter="filter" :rows="rows"
+                                :columns="columns" row-key="name" :visible-columns="visibileColumns"
+                                :pagination="pagination" @update:pagination="changePagination">
+
+                                <template v-slot:body-cell-account="props">
+                                    <q-td :props="props">
+                                        <div :class="props.row.refresh == true ? 'loading-opacity':''">{{ props.row.account }}</div>
+                                    </q-td>
+                                </template>
+
+                                <template v-slot:body-cell-followers="props">
+                                    <q-td :props="props">
+                                        <div :class="props.row.refresh == true ? 'loading-opacity':''">{{ props.row.followers }}</div>
+                                    </q-td>
+                                </template>
+
+                                <template v-slot:body-cell-following="props">
+                                    <q-td :props="props">
+                                        <div :class="props.row.refresh == true ? 'loading-opacity':''">{{ props.row.following }}</div>
+                                    </q-td>
+                                </template>
+
+                                <template v-slot:body-cell-media="props">
+                                    <q-td :props="props">
+                                        <div :class="props.row.refresh == true ? 'loading-opacity':''">{{ props.row.media }}</div>
+                                    </q-td>
+                                </template>
+
+                                <template v-slot:body-cell-tt_created_at="props">
+                                    <q-td :props="props">
+                                        <div :class="props.row.refresh == true ? 'loading-opacity':''">{{ props.row.tt_created_at }}</div>
+                                    </q-td>
+                                </template>
+
+                                <template v-slot:body-cell-last_detection="props">
+                                    <q-td :props="props">
+                                        <div :class="props.row.refresh == true ? 'loading-opacity':''">{{ props.row.last_detection }}</div>
+                                    </q-td>
+                                </template>
+
+                                <template v-slot:body-cell-refresh="props">
+                                    <q-td :props="props">
+                                        <div class="row no-wrap justify-center items-center q-gutter-sm"
+                                            style="font-size: 2em">
+                                            <div v-if="props.row.refresh == true">
+                                                <q-spinner-hourglass color="black" />
+                                            </div>
+                                            <div v-else-if="props.row.refresh == -1">
+                                                <q-icon name="mdi-check-circle-outline" color="positive" />
+                                            </div>
+                                            <div v-else></div>
+                                        </div>
+                                    </q-td>
+                                </template>
                                 <template v-slot:body-cell-action="props">
                                     <q-td :props="props">
-                                        <div class="row no-wrap justify-center items-center q-gutter-sm">
-                                            <div>
-                                                <router-link :to="{ name: 'followers.detail', params: { id: APP.encryptID(props.row.id) } }">
-                                                  <q-btn size="sm" padding="sm" round class="p-common-bg" icon="mdi-note-edit-outline"/>
-                                                </router-link>
-                                            </div>
-                                            <div>
-                                                <q-btn @click="showConfirmDialog(props.row)" size="sm" padding="sm" round class="p-common-btn" icon="mdi-trash-can-outline" />
+                                        <div :class="props.row.refresh == true ? 'loading-opacity':''">
+                                            <div class="row no-wrap justify-center items-center q-gutter-sm">
+                                                <div>
+                                                    <router-link
+                                                        :to="{ name: 'followers.detail', params: { id: APP.encryptID(props.row.id) } }">
+                                                        <q-btn size="sm" padding="sm" round class="p-common-bg" :disable="props.row.refresh == false ? false:true"
+                                                            icon="mdi-note-edit-outline" />
+                                                    </router-link>
+                                                </div>
+                                                <div>
+                                                    <q-btn @click="showConfirmDialog(props.row)" size="sm" padding="sm" round :disable="props.row.refresh == false ? false:true"
+                                                        class="p-common-btn" icon="mdi-trash-can-outline" />
+                                                </div>
                                             </div>
                                         </div>
                                     </q-td>
-                                  </template>
+                                </template>
                             </q-table>
                         </q-card-section>
                     </q-card>
@@ -142,3 +260,10 @@ const refreshAll = async () => {
         </div>
     </div>
 </template>
+
+<style lang="scss">
+.follower-tbl {}
+
+.loading-opacity {
+    opacity: 0.3;
+}</style>

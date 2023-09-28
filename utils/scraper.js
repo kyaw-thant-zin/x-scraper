@@ -53,11 +53,15 @@ const BEAUTIFY = {
     }
 }
 
+
+let browserGlobal
+let contextGlobal
+
 const SCRAPER = {
     "puppeteer": {
         "getProfile": async (account) => {
             const browser = await puppeteer.launch({ 
-                // headless: false,
+                headless: true,
                 defaultViewport: { width: 1366, height: 768 },
                 args: [
                     '--disable-dev-shm-usage', // Disable shared memory usage
@@ -112,11 +116,74 @@ const SCRAPER = {
             } else {
                 return userProfile
             }
+        },
+        "getProfileRefresh": async (account, accountList, index) => {
+            if(index == 0) {
+                browserGlobal = await puppeteer.launch({ 
+                    headless: true,
+                    defaultViewport: { width: 1366, height: 768 },
+                    args: [
+                        '--disable-dev-shm-usage', // Disable shared memory usage
+                        '--no-sandbox', // Disable sandboxing for Linux
+                        '--disable-gpu',
+                        '--disable-features=site-per-process'
+                    ],
+                    ignoreHTTPSErrors: true
+                })
+            }
+
+            let userProfile = null
+
+            const page = await browserGlobal.newPage()
+            await page.setRequestInterception(true)
+        
+            page.on('request', request => {
+                const url = request.url()
+                request.continue()
+            });
+        
+            page.on('response', async (response) => {
+                const url = response.url();
+                
+                // Check if the URL matches the desired pattern
+                if (url.includes('https://twitter.com/i/api/graphql/') && url.includes('/UserByScreenName')) {
+                  
+                    // Check the response status
+                    if (response.ok()) {
+                    
+                        try {
+                            const data = await response.json()
+                            if(data?.data?.user?.result?.legacy) {
+                                userProfile = data?.data?.user?.result?.legacy
+                            }
+                            // Process the response data as needed
+                        } catch (error) {
+                            console.error('Error parsing response JSON:', error)
+                        }
+                    } else {
+                        console.error('Response error (status code:', response.status(), ')')
+                    }
+                }
+            });
+        
+            await page.goto(`https://twitter.com/${account}`, { waitUntil: 'networkidle0'})
+            
+            if(index == accountList - 1) {
+                await browserGlobal.close()
+            }
+
+            // beautify data
+            if(userProfile != null) {
+                const data = BEAUTIFY.profile(userProfile)
+                return data
+            } else {
+                return userProfile
+            }
         }
     },
     "playwright": {
         "getProfile": async (account) => {
-            const browser = await firefox.launch(config.projects.find(project => project.name === 'Desktop Firefox').use)
+            const browser = await firefox.launch(config.projects.find(project => project.name === 'Desktop Firefox Refresh').use)
             const context = await browser.newContext()
             const page = await context.newPage()
         
@@ -145,6 +212,54 @@ const SCRAPER = {
             await page.goto('https://twitter.com/'+account, { waitUntil: 'load' });
             await browser.close()
 
+
+            // beautify data
+            if(userProfile != null) {
+                const data = BEAUTIFY.profile(userProfile)
+                return data
+            } else {
+                return userProfile
+            }
+        },
+        "getProfileRefresh": async (account, accountList, index) => {
+            if(index == 0) {
+                browserGlobal = await firefox.launch(config.projects.find(project => project.name === 'Desktop Firefox').use)
+                contextGlobal = await browserGlobal.newContext()
+            }
+
+            let userProfile = null
+
+            const page = await contextGlobal.newPage()
+        
+            page.on('response', async (response) => {
+                const url = response.url();
+        
+                // Check if the URL matches the desired pattern
+                if (url.includes('https://twitter.com/i/api/graphql/') && url.includes('/UserByScreenName')) {
+
+                    console.log('detect url')
+                    // Check the response status
+                    if (response.ok()) {
+                        
+                        try {
+                            const data = await response.json()
+                            if(data?.data?.user?.result?.legacy) {
+                                userProfile = data?.data?.user?.result?.legacy
+                            }
+                            // Process the response data as needed
+                        } catch (error) {
+                            console.error('Error parsing response JSON:', error)
+                        }
+                    } else {
+                        console.error('Response error (status code:', response.status(), ')')
+                    }    
+                }
+            });
+            await page.goto('https://twitter.com/'+account, { waitUntil: 'load' });
+            
+            if(index == accountList - 1) {
+                await browserGlobal.close()
+            }
 
             // beautify data
             if(userProfile != null) {
