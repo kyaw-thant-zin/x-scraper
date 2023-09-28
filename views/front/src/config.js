@@ -3,17 +3,17 @@ import { AES } from 'crypto-js'
 import CryptoJS from 'crypto-js'
 
 const LCOAL_SITE_URL = 'http://localhost:8000'
-const SERVER_SITE_URL = 'http://localhost:8000'
+const SERVER_SITE_URL = 'http://v157-7-137-45.myvps.jp'
 const LOCAL_PUBLIC_SITE_URL = 'http://localhost:8000'
-const SERVER_PUBLIC_SITE_URL = 'http://localhost:8000'
-const SECRET_KEY = '+@V0.1'
+const SERVER_PUBLIC_SITE_URL = 'http://v157-7-137-45.myvps.jp'
 const LOCAL_URL = 'http://localhost:8000'
-const SERVER_URL = 'http://localhost:8000'
-const PREFIX = '/api'
+const SERVER_URL = 'http://v157-7-137-45.myvps.jp'
+const SECRET_KEY = '+@V0.1'
+const PREFIX = '/xfollowers/api'
 
 
 export const APP = {
-    'ACTIVE_PUBLIC_SITE_URL': LOCAL_PUBLIC_SITE_URL,
+    'ACTIVE_PUBLIC_SITE_URL': SERVER_PUBLIC_SITE_URL,
     'ACTIVE_SITE_URL': SERVER_SITE_URL,
     'SECRET_KEY': SECRET_KEY,
     'encryptID': (id) => {

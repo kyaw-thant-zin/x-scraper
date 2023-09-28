@@ -173,6 +173,7 @@ const refresh = asyncHnadler( async (req, res) => {
             const f = await Followers.update(followerData, {
                 where: { id: follower.id },
             })
+            
 
             const data = await Followers.findOne({
                 where: {

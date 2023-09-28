@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { ref } from "vue";
+import { APP } from '@/config.js'
 import { defineStore } from "pinia";
 import { API } from "@/api/index.js";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -115,9 +116,12 @@ export const useFollowerStore = defineStore("follower", () => {
   };
 
   const handleRefreshProcess = () => {
-    const socket = io("http://localhost:8000");
+    const socket = io(APP.ACTIVE_SITE_URL, {
+      path: '/xfollowers/socket.io'
+    });
 
     socket.on("connect", () => {
+      console.log('connected to server....')
         socket.on("refresh-account", (res) => {
             if (res?.updated && res.updated && res?.data && res.data != null) {
                 storeRow(res.data)

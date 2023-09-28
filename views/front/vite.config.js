@@ -8,7 +8,7 @@ import VitePluginBrowserSync from 'vite-plugin-browser-sync'
 export default defineConfig({
   assetsDir: ['public'],
   outDir: './',
-  base: '/',
+  base: '/xfollowers',
   plugins: [
     vue({
       template: {
