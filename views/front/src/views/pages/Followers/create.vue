@@ -6,10 +6,11 @@ import { useFollowerStore } from '@/stores/Followers'
 const $q = useQuasar()
 const followerStore = useFollowerStore()
 
-const settingForm = ref(null)
+const tab = ref('account')
 const formData = ref({
   account: '',
-  userId: 1
+  userId: 1,
+  file: null
 })
 
 const resetForm = () => {
@@ -49,12 +50,14 @@ const onSubmit = async () => {
 watchEffect(() => {
   // set area rows
   if (followerStore._loading) {
-    $q.loading.show()
+    $q.loading.show({
+      message: followerStore._createMessage
+    })
   } else {
     $q.loading.hide()
   }
 
-}, [followerStore._loadi])
+}, [followerStore._loading, followerStore._createMessage])
 
 </script>
 <template>
@@ -80,30 +83,71 @@ watchEffect(() => {
               <div class="common-card-ttl"></div>
             </q-card-section>
             <q-card-section class="q-px-none">
-              <q-form ref="settingForm" @submit="onSubmit" class="q-gutter-md">
-                <div class="row q-px-lg q-mt-none">
-                  <div class="col-6">
-                    <div class="row items-top">
-                      <div class="col-12 col-sm-12 col-md-4 col-lg-4">
-                        <label class="">アカウント</label>
-                      </div>
-                      <div class="col-12 col-sm-12 col-md-8 col-lg-8 form-input">
-                        <q-input name="account" outlined class="common-input-text" v-model="formData.account" lazy-rules
-                          :rules="[
-                            val => !!val.replace(/\s/g, '') || 'フィールドは必須項目です',
-                          ]" />
+              <q-tabs
+                v-model="tab"
+                dense
+                class="text-grey"
+                active-color="primary"
+                indicator-color="primary"
+                align="justify"
+                narrow-indicator
+              >
+                <q-tab name="account" label="口座" />
+                <q-tab name="file" label="ファイルアップロー" />
+              </q-tabs>
+              <q-separator />
+
+              <q-tab-panels v-model="tab" animated>
+                <q-tab-panel name="account">
+                  <q-form @submit="onSubmit" class="q-gutter-md q-py-xl">
+                    <div class="row q-px-lg q-mt-none">
+                      <div class="col-12">
+                        <div class="row items-top">
+                          <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+                            <label class="">アカウント</label>
+                          </div>
+                          <div class="col-12 col-sm-12 col-md-8 col-lg-8 form-input">
+                            <q-input name="account" outlined class="common-input-text" v-model="formData.account" lazy-rules placeholder="口座ID" hint="複数のアカウントには「,」を使用します (Ex: account1,account2)"
+                              :rules="[
+                                val => !!val.replace(/\s/g, '') || 'フィールドは必須項目です',
+                              ]" />
+                          </div>
+                        </div>
+                        <div class="row items-top q-mt-lg">
+                          <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+                          </div>
+                          <div class="col-12 col-sm-12 col-md-8 col-lg-8 form-input">
+                            <q-btn type="submit" class="p-common-btn" label="新規作成" />
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div class="row items-top q-mt-lg">
-                      <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+                  </q-form>
+                </q-tab-panel>
+
+                <q-tab-panel name="file">
+                  <q-form @submit="onSubmit" class="q-gutter-md q-py-xl">
+                    <div class="row q-px-lg q-mt-none">
+                      <div  class="col-12">
+                        <label>アップロードファイルを選択してください</label>
                       </div>
-                      <div class="col-12 col-sm-12 col-md-8 col-lg-8 form-input">
+                      <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+                        <q-file 
+                          name="account" 
+                          dense
+                          outlined 
+                          class="common-input-text q-mt-md" 
+                          v-model="formData.file" 
+                          accept=".csv,.xlsx"
+                          hint="" />
+                      </div>
+                      <div class="col-12 q-mt-lg form-input">
                         <q-btn type="submit" class="p-common-btn" label="新規作成" />
                       </div>
                     </div>
-                  </div>
-                </div>
-              </q-form>
+                  </q-form>
+                </q-tab-panel>
+              </q-tab-panels>
             </q-card-section>
           </q-card>
         </div>

@@ -54,6 +54,7 @@ export const API = {
             return response.data
         },
         "store": async (formData) => {
+            headers['Content-Type'] = 'multipart/form-data'
             const response = await instance.post(apiURL+'/followers/store', formData, {headers: headers})
             return response.data
         },

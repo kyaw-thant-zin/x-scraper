@@ -3,6 +3,7 @@
 /**
  * Required External Modules
  */
+const xlsx = require('xlsx')
 const express = require("express")
 const asyncHnadler = require('express-async-handler')
 
@@ -39,48 +40,131 @@ const index = asyncHnadler( async (req, res) => {
     res.json(followers)
 })
 
+const scrapeAndStore = async (data, account , index, length) => {
+    return new Promise(async (resovle, reject) => {
+
+        const io = global.io // Access io as a global variable
+        io.emit('create-account', { message: "「"+account+"」のデータの取得を開始します" })
+        const dumpUserProfile = await SCRAPER.puppeteer.getProfile(account, index, length)
+        if(dumpUserProfile != null) {
+            io.emit('create-account', { message: "データをデータベースに保存する準備をする" })
+                // store the data
+                const followerData = {
+                    userId: data.userId,
+                    account: account,
+                    following: dumpUserProfile.followings_count,
+                    followers: dumpUserProfile.followers_count,
+                    friends: dumpUserProfile.favourites_count,
+                    media_count: dumpUserProfile.media_count,
+                    name: dumpUserProfile.name,
+                    profile_banner_url: dumpUserProfile.profile_banner_url,
+                    profile_image_url_https: dumpUserProfile.profile_image_url_https,
+                    statuses_count: dumpUserProfile.statuses_count,
+                    description: dumpUserProfile.description,
+                    tt_created_at: dumpUserProfile.created_at
+                }
+
+                const follower = await Followers.create(followerData)
+                if(follower) {
+                    io.emit('create-account', { message: "すべて完了！" })
+                    resovle(true)
+                } else {
+                    resovle(false)
+                }
+
+            } else {
+                io.emit('create-account', { message: "スキップされました:「"+dataArray[i]+"」のデータを取得できません" })
+                resovle(false)
+            }
+    })
+    
+}
+
 // @desc POST store followers
 // @route POST /followers/store
 // @access Private
 const store = asyncHnadler( async (req, res) => {
     const data = req.body
-    let userProfile = null
-    if((data?.account && data.account != null) && (data?.userId && data.userId != null)) {
-        userProfile = await SCRAPER.playwright.getProfile(data.account)
-        if(userProfile != null) {
-            // store the data
-            const followerData = {
-                userId: data.userId,
-                account: data.account,
-                following: userProfile.followings_count,
-                followers: userProfile.followers_count,
-                friends: userProfile.favourites_count,
-                media_count: userProfile.media_count,
-                name: userProfile.name,
-                profile_banner_url: userProfile.profile_banner_url,
-                profile_image_url_https: userProfile.profile_image_url_https,
-                statuses_count: userProfile.statuses_count,
-                description: userProfile.description,
-                tt_created_at: userProfile.created_at
-            }
+    const file = req.file
 
-            console.log(followerData)
+    let dataArray = []
 
-            const follower = await Followers.create(followerData).then(followers => {
-                return followers.get({ plain: true })
-            })
+    if(!file) {
+        
+        if((data?.account && data.account != null) && (data?.userId && data.userId != null)) {
+    
+            dataArray = data.account.includes(',') ? data.account.split(',') : [data.account]
 
-            if(follower) {
-                res.status(201).send({success: true})
-            } else {
-                res.json({success: false})
-            }
         } else {
             res.json({success: false})
         }
+
+    } else {
+        const fileExtension = file.originalname.split('.').pop().toLowerCase()
+        if(fileExtension == 'xlsx') {
+            // Read Excel (xlsx) file
+            const workbook = xlsx.read(file.buffer, { type: 'buffer' });
+            const sheetName = workbook.SheetNames[0];
+            const excelData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+            // Check if excelData is empty
+            if (!excelData.length) {
+                res.json({success: false})
+            }
+
+            // Process Excel data
+            for (let i = 0; i < excelData.length; i++) {
+                const rowData = excelData[i];
+                let key = Object.keys(rowData)[0]; // Extracting the key (URL)
+                let value = rowData[key]; // Extracting the value (another URL)
+
+                if(dataArray.length == 0) {
+                    key = key.replace('https://twitter.com/', '')
+                    if(key != '') {
+                        dataArray.push(key)
+                    }
+                    value = value.replace('https://twitter.com/', '')
+                    if(value != '') {
+                        dataArray.push(value)
+                    }
+                } else {
+                    value = value.replace('https://twitter.com/', '')
+                    if(value != '') {
+                        dataArray.push(value)
+                    }
+                }
+            }
+        } else if(fileExtension == 'csv') {
+            // Read CSV file
+            req.file.buffer.toString().split('\n').forEach(line => {
+                const columns = line.replace('\r', '').split(',');
+                if (columns.length === 1 && columns[0] !== '') {
+                    // Handle single-item arrays
+                    dataArray.push(columns[0].replace('https://twitter.com/', ''));
+                } else {
+                    dataArray.push(columns.replace('https://twitter.com/', ''));
+                }
+            });
+
+        }else {
+            res.json({success: false})
+        }
+    }
+
+    console.log(dataArray)
+
+    if(Array.isArray(dataArray) && dataArray.length > 0) {
+    
+        for(let i = 0; i < dataArray.length; i++) {
+            await scrapeAndStore(data, dataArray[i], i, dataArray.length)
+        }
+
+        res.json({success: true})
+
     } else {
         res.json({success: false})
     }
+    
     
 })
 
@@ -154,7 +238,8 @@ const refresh = asyncHnadler( async (req, res) => {
         // get account data
         const follower = followers[index]
         const account = follower.account
-        const userProfile = await SCRAPER.puppeteer.getProfileRefresh(account, followers.length, index)
+        const userProfile = await SCRAPER.playwright.getProfileRefresh(account, followers.length, index)
+        console.log(userProfile)
         if(userProfile != null) {
 
             // update the data

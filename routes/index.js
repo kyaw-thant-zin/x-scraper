@@ -4,6 +4,7 @@
  * Required External Modules
  */
 const { Router } = require('express')
+const multer = require('multer')
 
 /**
  * Required Internal Modules
@@ -17,6 +18,8 @@ const { requireAuth } = require('../middleware/auth.middleware')
  */
 const router = Router()
 
+const upload = multer()
+
 /**
  * Request
  */
@@ -25,7 +28,7 @@ router.post('/check-auth', requireAuth, checkAuth)
 router.post('/sign-out', signout)
 
 router.get('/followers', requireAuth, index)
-router.post('/followers/store', requireAuth, store)
+router.post('/followers/store', upload.single('file'), requireAuth, store)
 router.get('/followers/:id/detail', requireAuth, detail)
 router.delete('/followers/:id/destroy', requireAuth, destroy)
 router.post('/followers/refresh', requireAuth, refresh)

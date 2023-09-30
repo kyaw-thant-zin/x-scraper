@@ -21,8 +21,8 @@ const User = db.users
 // @route POST /check-auth
 // @access Private
 const checkAuth = asyncHnadler( async (req, res) => {
-    const Uuid = req.decodedToken
-    const token = generateToken(Uuid)
+    const decodedToken = req.decodedToken
+    const token = generateToken(decodedToken.uuid)
     res.cookie('token', token, { httpOnly: true, maxAge: 4000 * 1000 })
     res.json({
         mode: 'auth'

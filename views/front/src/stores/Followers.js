@@ -13,8 +13,14 @@ export const useFollowerStore = defineStore("follower", () => {
   const _error = ref(false);
   const _followers = ref(null);
   const _follower = ref(null);
+  const _createMessage = ref("データを取得中ですのでお待ちください。");
 
   dayjs.extend(relativeTime);
+  const socket = io(APP.ACTIVE_SITE_URL);
+
+  socket.on("connect", () => {
+    console.log('connected to server....')
+  });
 
   const storeLoading = (loading) => {
     _loading.value = loading;
@@ -32,6 +38,7 @@ export const useFollowerStore = defineStore("follower", () => {
     const dumpData = {};
     dumpData.id = data.id;
     dumpData.refresh = -1;
+    dumpData.name = data.name
     dumpData.account = data.account;
     dumpData.followers = data.followers;
     dumpData.following = data.following;
@@ -49,6 +56,7 @@ export const useFollowerStore = defineStore("follower", () => {
         const dumpData = {};
         dumpData.id = element.id;
         dumpData.refresh = false;
+        dumpData.name = element.name
         dumpData.account = element.account;
         dumpData.followers = element.followers;
         dumpData.following = element.following;
@@ -95,6 +103,11 @@ export const useFollowerStore = defineStore("follower", () => {
 
   const handleStore = async (formData) => {
     storeLoading(true);
+
+    socket.on("create-account", (res) => {
+      _createMessage.value = res.message
+    });
+
     const response = await API.followers.store(formData);
     if (response?.success) {
       storeSuccess(true);
@@ -116,17 +129,10 @@ export const useFollowerStore = defineStore("follower", () => {
   };
 
   const handleRefreshProcess = () => {
-    const socket = io(APP.ACTIVE_SITE_URL, {
-      path: '/xfollowers/socket.io'
-    });
-
-    socket.on("connect", () => {
-      console.log('connected to server....')
-        socket.on("refresh-account", (res) => {
-            if (res?.updated && res.updated && res?.data && res.data != null) {
-                storeRow(res.data)
-            }
-        });
+    socket.on("refresh-account", (res) => {
+      if (res?.updated && res.updated && res?.data && res.data != null) {
+          storeRow(res.data)
+      }
     });
   };
 
@@ -147,6 +153,7 @@ export const useFollowerStore = defineStore("follower", () => {
     _success,
     _error,
     _loading,
+    _createMessage,
     storeError,
     storeSuccess,
     handleGetAll,

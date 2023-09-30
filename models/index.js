@@ -13,6 +13,7 @@ const sequelize = new Sequelize(
         dialectOptions: {
             useUTC: false,
             timezone:  dbConfig.TIMEZON,
+            connectTimeout: 60000
         },
         timezone: dbConfig.TIMEZONE,
         operatorsAliases: 'false',

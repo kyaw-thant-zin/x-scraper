@@ -12,22 +12,23 @@ const columns = [
     { name: 'id', required: false, label: 'ID', sortable: false },
     { name: 'refresh', required: false, align: 'center', label: '', field: 'refresh', sortable: false },
     {
-        name: 'account',
+        name: 'name',
         required: true,
-        label: 'アカウント',
+        label: 'アカウント名',
         align: 'center',
-        field: row => row.account,
+        field: row => row.name,
         format: val => `${val}`,
         sortable: true
     },
-    { name: 'followers', required: true, align: 'center', label: 'フォロワー', field: 'followers', sortable: true },
-    { name: 'following', required: true, align: 'center', label: 'フォロー中', field: 'following', sortable: true },
-    { name: 'media', required: true, align: 'center', label: 'メディア数', field: 'media', sortable: true },
-    { name: 'tt_created_at', required: true, align: 'center', label: '作成日', field: 'tt_created_at', sortable: true },
-    { name: 'last_detection', required: true, align: 'center', label: '最後の検出', field: 'last_detection', sortable: true },
+    { name: 'account', align: 'center', label: 'アカウント', field: 'account', sortable: true },
+    { name: 'followers', align: 'center', label: 'フォロワー', field: 'followers', sortable: true },
+    { name: 'following', align: 'center', label: 'フォロー中', field: 'following', sortable: true },
+    { name: 'media', align: 'center', label: 'メディア数', field: 'media', sortable: true },
+    { name: 'tt_created_at', align: 'center', label: '作成日', field: 'tt_created_at', sortable: true },
+    { name: 'last_detection', align: 'center', label: '最後の検出', field: 'last_detection', sortable: true },
     { name: 'action', align: 'center', label: 'アクション', field: 'action' },
 ]
-const visibileColumns = ['refresh', 'account', 'followers', 'following', 'tt_created_at', 'last_detection', 'action']
+const visibileColumns = ['refresh', 'name', 'account', 'followers', 'following', 'media', 'tt_created_at', 'last_detection', 'action']
 const rows = ref([])
 const pagination = ref({
     page: 1,
@@ -179,42 +180,67 @@ watchEffect(() => {
                             </div>
                         </q-card-section>
                         <q-card-section class="q-px-none">
-                            <q-table class="index-table no-shadow follower-tbl" :filter="filter" :rows="rows"
-                                :columns="columns" row-key="name" :visible-columns="visibileColumns"
-                                :pagination="pagination" @update:pagination="changePagination">
+                            <q-table class="index-table no-shadow follower-tbl" 
+                                :filter="filter" 
+                                :rows="rows"
+                                :columns="columns" 
+                                row-key="account" 
+                                :visible-columns="visibileColumns"
+                                :pagination="pagination" 
+                            >
+                                <template v-slot:top-right>
+                                    <q-input borderless dense debounce="300" v-model="filter" placeholder="Search">
+                                      <template v-slot:append>
+                                        <q-icon name="search" />
+                                      </template>
+                                    </q-input>
+                                  </template>
+                                  
+                                <template v-slot:body-cell-name="props">
+                                    <q-td>
+                                        <div :class="props.row.refresh == true ? 'loading-opacity truncate':' truncate'">
+                                            {{ props.row.name }}
+                                            <q-tooltip anchor="top middle" self="bottom middle" :offset="[10, 10]">
+                                                <strong>{{ props.row.name }}</strong>
+                                            </q-tooltip>
+                                        </div>
+                                    </q-td>
+                                </template>
 
                                 <template v-slot:body-cell-account="props">
-                                    <q-td :props="props">
-                                        <div :class="props.row.refresh == true ? 'loading-opacity':''">{{ props.row.account }}</div>
+                                    <q-td>
+                                        <div :class="props.row.refresh == true ? 'loading-opacity':''">
+                                            <a :href="'https://twitter.com/'+props.row.account" target="_blank">@{{ props.row.account }}</a>
+                                        </div>
                                     </q-td>
                                 </template>
 
                                 <template v-slot:body-cell-followers="props">
-                                    <q-td :props="props">
-                                        <div :class="props.row.refresh == true ? 'loading-opacity':''">{{ props.row.followers }}</div>
+                                    <q-td>
+                                        <div :class="props.row.refresh == true ? 'loading-opacity text-center':' text-center'">{{ props.row.followers }}</div>
                                     </q-td>
                                 </template>
 
                                 <template v-slot:body-cell-following="props">
-                                    <q-td :props="props">
-                                        <div :class="props.row.refresh == true ? 'loading-opacity':''">{{ props.row.following }}</div>
+                                    <q-td>
+                                        <div :class="props.row.refresh == true ? 'loading-opacity text-center':' text-center'">{{ props.row.following }}</div>
                                     </q-td>
                                 </template>
 
                                 <template v-slot:body-cell-media="props">
-                                    <q-td :props="props">
-                                        <div :class="props.row.refresh == true ? 'loading-opacity':''">{{ props.row.media }}</div>
+                                    <q-td>
+                                        <div :class="props.row.refresh == true ? 'loading-opacity text-center':' text-center'">{{ props.row.media }}</div>
                                     </q-td>
                                 </template>
 
                                 <template v-slot:body-cell-tt_created_at="props">
-                                    <q-td :props="props">
+                                    <q-td>
                                         <div :class="props.row.refresh == true ? 'loading-opacity':''">{{ props.row.tt_created_at }}</div>
                                     </q-td>
                                 </template>
 
                                 <template v-slot:body-cell-last_detection="props">
-                                    <q-td :props="props">
+                                    <q-td>
                                         <div :class="props.row.refresh == true ? 'loading-opacity':''">{{ props.row.last_detection }}</div>
                                     </q-td>
                                 </template>
@@ -233,6 +259,7 @@ watchEffect(() => {
                                         </div>
                                     </q-td>
                                 </template>
+
                                 <template v-slot:body-cell-action="props">
                                     <q-td :props="props">
                                         <div :class="props.row.refresh == true ? 'loading-opacity':''">
@@ -266,4 +293,13 @@ watchEffect(() => {
 
 .loading-opacity {
     opacity: 0.3;
-}</style>
+}
+
+.truncate {
+    width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;  
+}
+
+</style>
