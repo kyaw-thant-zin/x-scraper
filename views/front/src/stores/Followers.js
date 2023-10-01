@@ -16,7 +16,10 @@ export const useFollowerStore = defineStore("follower", () => {
   const _createMessage = ref("データを取得中ですのでお待ちください。");
 
   dayjs.extend(relativeTime);
-  const socket = io(APP.ACTIVE_SITE_URL);
+  // const socket = io(APP.ACTIVE_SITE_URL);
+  const socket = io(APP.ACTIVE_SITE_URL, {
+    path: '/xfollowers/socket.io'
+  });
 
   socket.on("connect", () => {
     console.log('connected to server....')

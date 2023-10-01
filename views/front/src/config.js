@@ -9,12 +9,13 @@ const SERVER_PUBLIC_SITE_URL = 'http://v157-7-137-45.myvps.jp'
 const LOCAL_URL = 'http://localhost:8000'
 const SERVER_URL = 'http://v157-7-137-45.myvps.jp'
 const SECRET_KEY = '+@V0.1'
-const PREFIX = '/api'
+const SERVER_PREFIX = '/xfollowers/api'
+const LOCAL_PREFIX = '/api'
 
 
 export const APP = {
-    'ACTIVE_PUBLIC_SITE_URL': LOCAL_PUBLIC_SITE_URL,
-    'ACTIVE_SITE_URL': LCOAL_SITE_URL,
+    'ACTIVE_PUBLIC_SITE_URL': SERVER_PUBLIC_SITE_URL,
+    'ACTIVE_SITE_URL': SERVER_SITE_URL,
     'SECRET_KEY': SECRET_KEY,
     'encryptID': (id) => {
         // Encrypt the ID
@@ -31,9 +32,9 @@ export const APP = {
         return decryptedId;
     },
     'API': {
-        'PREFIX': PREFIX,
+        'PREFIX': SERVER_PREFIX,
         'LOCAL_URL': LOCAL_URL,
         'SERVER_URL': SERVER_URL,
-        'ACTIVE_API_URL': LOCAL_URL,
+        'ACTIVE_API_URL': SERVER_URL,
     }
 }

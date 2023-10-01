@@ -47,7 +47,8 @@ const scrapeAndStore = async (data, account , index, length) => {
         io.emit('create-account', { message: "「"+account+"」のデータの取得を開始します" })
         const dumpUserProfile = await SCRAPER.puppeteer.getProfile(account, index, length)
         if(dumpUserProfile != null) {
-            io.emit('create-account', { message: "データをデータベースに保存する準備をする" })
+            console.log('prepare for store')
+            io.emit('create-account', { message: "「"+account+"」: データをデータベースに保存する準備をする" })
                 // store the data
                 const followerData = {
                     userId: data.userId,
@@ -64,16 +65,17 @@ const scrapeAndStore = async (data, account , index, length) => {
                     tt_created_at: dumpUserProfile.created_at
                 }
 
+                console.log('store: '+account)
                 const follower = await Followers.create(followerData)
                 if(follower) {
-                    io.emit('create-account', { message: "すべて完了！" })
+                    io.emit('create-account', { message: "「"+account+"」: すべて完了！" })
                     resovle(true)
                 } else {
                     resovle(false)
                 }
 
             } else {
-                io.emit('create-account', { message: "スキップされました:「"+dataArray[i]+"」のデータを取得できません" })
+                io.emit('create-account', { message: "スキップされました:「"+account+"」のデータを取得できません" })
                 resovle(false)
             }
     })
@@ -158,7 +160,7 @@ const store = asyncHnadler( async (req, res) => {
         for(let i = 0; i < dataArray.length; i++) {
             await scrapeAndStore(data, dataArray[i], i, dataArray.length)
         }
-
+        console.log('finished.....')
         res.json({success: true})
 
     } else {
@@ -238,10 +240,10 @@ const refresh = asyncHnadler( async (req, res) => {
         // get account data
         const follower = followers[index]
         const account = follower.account
-        const userProfile = await SCRAPER.playwright.getProfileRefresh(account, followers.length, index)
+        const userProfile = await SCRAPER.puppeteer.getProfileRefresh(account, followers.length, index)
         console.log(userProfile)
         if(userProfile != null) {
-
+            console.log('prepare for store')
             // update the data
             const followerData = {
                 following: userProfile.followings_count,
@@ -254,7 +256,7 @@ const refresh = asyncHnadler( async (req, res) => {
                 statuses_count: userProfile.statuses_count,
                 description: userProfile.description,
             }
-
+            console.log('update')
             const f = await Followers.update(followerData, {
                 where: { id: follower.id },
             })
