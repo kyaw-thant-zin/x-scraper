@@ -77,6 +77,13 @@ function showConfirmDialog(row) {
     })
 }
 
+const customSort = (rows, sortBy, descending) => {
+    return rows.sort((a, b) => {
+        const aValue = a[sortBy];
+        const bValue = b[sortBy];
+        return descending ? bValue - aValue : aValue - bValue;
+    })
+}
 
 const refreshAll = async () => {
 
@@ -187,6 +194,7 @@ watchEffect(() => {
                                 row-key="account" 
                                 :visible-columns="visibileColumns"
                                 :pagination="pagination" 
+                                :sort-method="customSort"
                             >
                                 <template v-slot:top-right>
                                     <q-input borderless dense debounce="300" v-model="filter" placeholder="Search">
