@@ -41,11 +41,11 @@ export const useXStore = defineStore("x", () => {
     const dumpData = {};
     dumpData.id = data.id;
     dumpData.refresh = -1;
-    dumpData.name = data.name
+    dumpData.name = data?.x_details[0].name
     dumpData.account = data.account;
-    dumpData.followers = data.followers;
-    dumpData.following = data.following;
-    dumpData.media = data.media_count;
+    dumpData.followers = data?.x_details[0].followers;
+    dumpData.following = data?.x_details[0].following;
+    dumpData.media = data?.x_details[0].media_count;
     dumpData.tt_created_at = data.tt_created_at;
     dumpData.last_detection = dayjs(data.updateTimestamp).fromNow();
     dumpData.action = "";
@@ -56,7 +56,6 @@ export const useXStore = defineStore("x", () => {
     const beautifyData = [];
     if (data != null) {
       data.forEach((element) => {
-        console.log(element)
         const dumpData = {};
         dumpData.id = element.id;
         dumpData.refresh = false;
@@ -78,23 +77,44 @@ export const useXStore = defineStore("x", () => {
     const profile = {
       bg: data?.profile_banner_url,
       img: data?.profile_image_url_https,
-      name: data?.name,
+      name: data?.x_details[0].name,
       account: data?.account,
-      desc: data?.description,
-      following: data?.following,
-      followers: data?.followers,
-      friends: data?.friends,
-      media: data?.media_count,
-      statuses: data?.statuses_count,
+      desc: data?.x_details[0].description,
+      following: data?.x_details[0].following,
+      followers: data?.x_details[0].followers,
+      friends: data?.x_details[0].friends,
+      media: data?.x_details[0].media_count,
+      statuses: data?.x_details[0].statuses_count,
       joined: data?.tt_created_at,
+      chart: []
     };
+
+    if(data?.x_details.length > 0) {
+
+      data.x_details.forEach((ele) => {
+
+        const parsedDate = dayjs(ele.createTimestamp)
+        const dumpEle = {
+          year: parsedDate.year(),
+          month: parsedDate.format('MM'),
+          dayOfWeek: parsedDate.format('ddd'),
+          day: parsedDate.date(),
+          date: parsedDate.format('YYYY/MM/DD'),
+          y: ele.followers
+        }
+
+        profile.chart.push(dumpEle)
+
+      })
+
+    }
+
     return profile;
   };
 
   const handleGetAll = async () => {
     storeLoading(true);
-    const response = await API.followers.getAll();
-    console.log(response)
+    const response = await API.followers.getAll()
     storeLoading(false);
     return storeRows(response);
   };
@@ -136,7 +156,7 @@ export const useXStore = defineStore("x", () => {
   const handleRefreshProcess = () => {
     socket.on("refresh-account", (res) => {
       if (res?.updated && res.updated && res?.data && res.data != null) {
-          storeRow(res.data)
+        storeRow(res.data)
       }
     });
   };

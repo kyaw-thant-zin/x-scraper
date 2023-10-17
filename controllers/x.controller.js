@@ -197,6 +197,10 @@ const detail = asyncHnadler( async (req, res) => {
         let x = await X.findOne({
             where: {
                 id: data.id,
+            },
+            include: {
+                model: XDetail,
+                order: [['id', 'DESC']], 
             }
         })
         res.send(x)
@@ -263,31 +267,53 @@ const refresh = asyncHnadler( async (req, res) => {
         if(userProfile != null) {
             console.log('prepare for store')
             // update the data
-            const followerData = {
-                following: userProfile.followings_count,
-                followers: userProfile.followers_count,
-                friends: userProfile.favourites_count,
-                media_count: userProfile.media_count,
-                name: userProfile.name,
+            const profileData = {
                 profile_banner_url: userProfile.profile_banner_url,
                 profile_image_url_https: userProfile.profile_image_url_https,
-                statuses_count: userProfile.statuses_count,
-                description: userProfile.description,
             }
+
             console.log('update')
-            const x = await X.update(followerData, {
+            const xUpdate = await X.update(profileData, {
                 where: { id: follower.id },
             })
-            
+            if(xUpdate) {
 
-            const data = await X.findOne({
-                where: {
-                    id: follower.id,
+                // store the followers
+                const followerData = {
+                    xId: follower.id,
+                    name: userProfile.name,
+                    following: userProfile.followings_count,
+                    followers: userProfile.followers_count,
+                    friends: userProfile.favourites_count,
+                    media_count: userProfile.media_count,
+                    statuses_count: userProfile.statuses_count,
+                    description: userProfile.description,
                 }
-            })
 
-            if(x) {
-                io.emit('refresh-account', { updated: true, data: data})
+                const xDetail = await XDetail.create(followerData)
+                if(xDetail) {
+                    const data = await X.findOne({
+                        where: {
+                            id: follower.id,
+                        },
+                        include: {
+                            model: XDetail,
+                            order: [['id', 'DESC']], 
+                            limit: 1 
+                        }
+                    })
+
+                    console.log(data)
+        
+                    if(x) {
+                        io.emit('refresh-account', { updated: true, data: data})
+                    }
+                } else {
+                    success = false
+                }
+
+            } else {
+                success = false
             }
         } else {
             success = false

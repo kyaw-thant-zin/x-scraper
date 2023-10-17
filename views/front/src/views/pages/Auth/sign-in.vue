@@ -33,7 +33,7 @@ const onSubmit = async () => {
   if(authStore._success) {
     authStore.storeSuccess(false)
     resetForm()
-    authStore.router.replace({ name: 'followers.index' })
+    authStore.router.replace({ name: 'x.index' })
   }
 
   if(authStore._error) {

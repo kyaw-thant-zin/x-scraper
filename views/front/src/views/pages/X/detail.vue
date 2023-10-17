@@ -1,9 +1,15 @@
 <script setup>
 import dayjs from "dayjs"
+import Chart from 'chart.js/auto'
 import { APP } from '@/config.js'
 import { useQuasar } from 'quasar'
 import { ref, computed, onMounted } from 'vue'
 import { useXStore } from '@/stores/X'
+
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
+dayjs.extend(isSameOrBefore)
+dayjs.extend(isSameOrAfter)
 
 const $q = useQuasar()
 const followerStore = useXStore()
@@ -23,138 +29,32 @@ const getDaysOfCurrentMonth = () => {
 
 const chartInstance = ref(null)
 const chartViewOptionRef = ref('今週')
-const chartViewOptions = [ '今週', '日ごと', '週ごと', '月ごと' ]
-const followersDataPoints = ref([
-    { label: "Feb", y: 11},
-    { label: "Mar", y: 4 },
-    { label: "Apr", y: 7 },
-    { label: "May", y: 10 },
-    { label: "Jun", y: 6 },
-    { label: "Jul", y: 14 },
-    { label: "Aug", y: 13.5 },
-])
-const followingDataPoints = ref([
-    { label: "Feb", y: 5},
-    { label: "Mar", y: 2 },
-    { label: "Apr", y: 13 },
-    { label: "May", y: 4 },
-    { label: "Jun", y: 14.5 },
-    { label: "Jul", y: 7 },
-    { label: "Aug", y: 10 },
-])
-const mediaDataPoints = ref([
-    { label: "Feb", y: 15},
-    { label: "Mar", y: 22 },
-    { label: "Apr", y: 13 },
-    { label: "May", y: 24 },
-    { label: "Jun", y: 14.5 },
-    { label: "Jul", y: 3 },
-    { label: "Aug", y: 12 },
-])
-const statusDataPoints = ref([
-    { label: "Feb", y: 9},
-    { label: "Mar", y: 11 },
-    { label: "Apr", y: 3 },
-    { label: "May", y: 4 },
-    { label: "Jun", y: 15 },
-    { label: "Jul", y: 9 },
-    { label: "Aug", y: 12 },
-])
-
-const options = ref({
-    animationEnabled: true,
-    exportEnabled: true,
-    zoomEnabled: true,
-    title:{
-        text: "フォロワーのチャート"
-    },
-    axisX: {
-        title: ' ⟶',
-        labelAngle: -45, // Rotate labels by -45 degrees
-        interval: 1,     // Display every label
-        staggerLines: 1,  // Stagger labels to prevent overlap
-        gridColor: "lightgray",   // Color of the grid lines
-        gridThickness: 1,  
-    },
-    axisY: {
-        title: "",
-        gridColor: "lightgray",   // Color of the grid lines
-        gridThickness: 1,         // Thickness of the grid lines
-    },
-    toolTip: {
-        shared: true
-    },
-    legend: {
-        cursor: "pointer",
-        itemclick: function (e) {
-            if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-                e.dataSeries.visible = false;
-            } else {
-                e.dataSeries.visible = true;
-            }
-            e.chart.render();
-        }
-    },
-    data: [{
-        type: "line",
-        name: "Followers",
-        color: "#F7C705",
-        toolTipContent: "{name}: {y}",
-        showInLegend: true,
-        markerType: "circle",  // Set marker type to circle
-        markerSize: 8,         // Adjust marker size
-        yValueFormatString: "#,###.##",
-        dataPoints: followersDataPoints.value
-    },
-    {
-        type: "line",
-        name: "Following",
-        color: "#012066",
-        toolTipContent: "{name}: {y}",
-        showInLegend: true,
-        markerType: "circle",  // Set marker type to circle
-        markerSize: 8,         // Adjust marker size
-        yValueFormatString: "#,###.##",
-        dataPoints: followingDataPoints.value
-    },{
-        type: "line",
-        name: "Media",
-        color: "#08912A",
-        toolTipContent: "{name}: {y}",
-        showInLegend: true,
-        markerType: "circle",  // Set marker type to circle
-        markerSize: 8,         // Adjust marker size
-        yValueFormatString: "#,###.##",
-        dataPoints: mediaDataPoints.value
-    },{
-        type: "line",
-        name: "Statuses",
-        color: "#AA0738",
-        toolTipContent: "{name}: {y}",
-        showInLegend: true,
-        markerType: "circle",  // Set marker type to circle
-        markerSize: 8,         // Adjust marker size
-        yValueFormatString: "#,###.##",
-        dataPoints: statusDataPoints.value
-    },]
-})
+const chartViewOptions = [ '今週', '今月', '週ごと', '月ごと' ]
+const followersDataPoints = ref([])
+let chart = null
 
 const dateIcon = ref(null)
 const dateRangeTxt = ref('')
+const dateRangeObj = ref({
+    start: null,
+    end: null
+})
 const dateRange = ref(null)
 const limitDate = (date) => {
     const currentDate = dayjs().format('YYYY/MM/DD')
-    return currentDate > date
+    return currentDate >= date
 }
 const dateFocus = () => {
     dateIcon.value?.$el.click()
 }
 const updateDate = () => {
     const dateString = JSON.stringify(dateRange.value).replace(/[{}"]/g, '').replace(/from:/, '').replace(/to:/, '').replace(/[,]/g, ' - ')
+    const dateArray = JSON.stringify(dateRange.value).replace(/[{}"]/g, '').replace(/from:/, '').replace(/to:/, '').split(',')
     dateRangeTxt.value = dateString
-
+    dateRangeObj.value.start = dateArray[0]
+    dateRangeObj.value.end = dateArray[1]
     // get title and dataPoints
-    updateChart(chartViewOptionRef.value, followersDataPoints.value, followingDataPoints.value)
+    updateChart(chartViewOptionRef.value, true)
 }
 
 const profile = ref({
@@ -168,27 +68,172 @@ const profile = ref({
     friends: '',
     media: '',
     statuses: '',
-    joined: ''
+    joined: '',
+    chart: ''
 })
 
 const updateView = (val) => {
     chartViewOptionRef.value = val
-    updateChart(chartViewOptionRef.value, followersDataPoints.value, followingDataPoints.value)
+    dateRangeTxt.value = ''
+    updateChart(chartViewOptionRef.value, false)
 }
 
 
-const updateChart = (updateTitle, updateFollowerDataPoints, updateFollowingDataPoints) => {
+const updateChart = (updateTitle, custom) => {
     console.log('update chart')
-    options.value.axisX.title = updateTitle
-    options.value.data[0].dataPoints = updateFollowerDataPoints
-    options.value.data[1].dataPoints = updateFollowingDataPoints
-    chartInstance.value.chart.render()
+
+    followersDataPoints.value = []
+
+    if(!custom) {
+
+        const currentDate = dayjs()
+        const currentMonth = dayjs().month()
+        const startOfWeek = currentDate.startOf('week')
+        const endOfWeek = currentDate.endOf('week')
+        const startOfMonth = currentDate.startOf('M')
+        const endOfMonth = currentDate.endOf('M')
+        const startOfYear = currentDate.startOf('y')
+        const endOfYear = currentDate.endOf('y')
+
+        if(updateTitle == '今週') { // this week
+            const dataInCurrentWeek = profile.value.chart.filter(dateObj => {
+                const date = dayjs(dateObj.date, 'YYYY/MM/DD')
+                return date.isSameOrAfter(startOfWeek) && date.isSameOrBefore(endOfWeek)
+            })
+
+            if(dataInCurrentWeek && dataInCurrentWeek.length > 0) {
+                dataInCurrentWeek.forEach((ele) => {
+                    const dumpData = {
+                        'label': ele.month+'/'+ele.day,
+                        'y': Number(ele.y)
+                    }
+                    followersDataPoints.value.push(dumpData)
+                })
+            }
+
+        } else if(updateTitle == '今月') { // this month
+            const dataInCurrentMonth = profile.value.chart.filter(dateObj => {
+                const date = dayjs(dateObj.date, 'YYYY/MM/DD')
+                return date.isSameOrAfter(startOfMonth) && date.isSameOrBefore(endOfMonth)
+            })
+
+            if(dataInCurrentMonth && dataInCurrentMonth.length > 0) {
+                dataInCurrentMonth.forEach((ele) => {
+                    const dumpData = {
+                        'label': ele.month+'/'+ele.day,
+                        'y': Number(ele.y)
+                    }
+                    followersDataPoints.value.push(dumpData)
+                })
+            }
+        } else if(updateTitle == '週ごと') { // weekly
+            const weeklyDates = []
+            let startOfWeek1 = startOfMonth.startOf('week')
+            while (startOfWeek1.isBefore(endOfMonth)) {
+                let endOfWeek = startOfWeek1.clone().endOf('week')
+                if (endOfWeek.isAfter(endOfMonth)) {
+                    endOfWeek = endOfMonth
+                }
+                weeklyDates.push(endOfWeek.format('YYYY/MM/DD'))
+                startOfWeek1 = endOfWeek.add(1, 'day')
+            }
+
+            const weeksInCurrentMonth = profile.value.chart.filter(dateObj => {
+                return weeklyDates.includes(dateObj.date)
+            })
+
+            if(weeksInCurrentMonth && weeksInCurrentMonth.length > 0) {
+                weeksInCurrentMonth.forEach((ele) => {
+                    const dumpData = {
+                        'label': ele.month+'/'+ele.day,
+                        'y': Number(ele.y)
+                    }
+                    followersDataPoints.value.push(dumpData)
+                })
+            }
+            
+        } else if(updateTitle == '月ごと') { // by month
+
+        }
+    } else {
+        const startOfCustom = dayjs(dateRangeObj.value.start, 'YYYY/MM/DD')
+        const endOfCustom = dayjs(dateRangeObj.value.end, 'YYYY/MM/DD')
+        const dataInCustom = profile.value.chart.filter(dateObj => {
+            const date = dayjs(dateObj.date, 'YYYY/MM/DD')
+            return date.isSameOrAfter(startOfCustom) && date.isSameOrBefore(endOfCustom)
+        })
+
+        if(dataInCustom && dataInCustom.length > 0) {
+            dataInCustom.forEach((ele) => {
+                const dumpData = {
+                    'label': ele.month+'/'+ele.day,
+                    'y': Number(ele.y)
+                }
+                followersDataPoints.value.push(dumpData)
+            })
+        }
+    }
+
+    if(chart != null) {
+        chart.data.labels = followersDataPoints.value.map(row => row.label)
+        chart.data.datasets[0].data = followersDataPoints.value.map(row => row.y)
+        chart.update();
+    }
+
 }
 
 onMounted( async () => {
     // fetch profile
     profile.value = await followerStore.handleGet(id.value)
-    updateChart(chartViewOptionRef.value, followersDataPoints.value, followingDataPoints.value)
+
+    updateChart(chartViewOptionRef.value)
+
+    chart = new Chart(
+        chartInstance.value,
+        {
+            type: 'line',
+            data: {
+                labels: followersDataPoints.value.map(row => row.label),
+                datasets: [
+                    {
+                        label: 'フォロワー',
+                        data: followersDataPoints.value.map(row => row.y),
+                        fill: false,
+                        borderColor: '#AFAFAF',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        suggestedMin: -1,  // Adjust to create spacing at the start
+                        suggestedMax: 5,  // Adjust to create spacing at the end
+                        ticks: {
+                            stepSize: 1,
+                            autoSkip: false,
+                            maxRotation: 45,  // Rotate labels by 45 degrees
+                            minRotation: 45   // Rotate labels by 45 degrees
+                        }
+                    },
+                    y: {
+                        
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'フォロワーのチャート'
+                    },
+                }
+            },
+        }
+    )
+
 })
 
 </script>
@@ -210,7 +255,7 @@ onMounted( async () => {
             </div>
             <div class="col-12 q-px-md">
                 <div class="row">
-                    <div class="col-12 col-sm-12 col-md-7 col-lg-8 col-xl-8 q-px-sm q-my-md">
+                    <div class="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 q-px-sm q-my-md">
                         <q-card>
                             <q-card-section class="row justify-between items-center q-py-md  q-px-lg">
                                 <div class="common-card-ttl">アカウントの詳細</div>
@@ -230,7 +275,7 @@ onMounted( async () => {
                                             <template v-slot:append>
                                               <q-icon ref="dateIcon" name="event" class="cursor-pointer">
                                                 <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                                  <q-date v-model="dateRange" @update:model-value="updateDate" :options="limitDate" range>
+                                                  <q-date v-model="dateRange" :options="limitDate" range>
                                                     <div class="row items-center justify-end">
                                                         <q-btn label="Cancel" color="primary" flat v-close-popup />
                                                         <q-btn label="OK" color="primary" flat @click="updateDate" v-close-popup />
@@ -244,16 +289,14 @@ onMounted( async () => {
                                 </div>
                                 <div class="row q-px-lg q-mt-lg">
                                     <div class="col-12">
-                                        <CanvasJSChart :options="options" ref="chartInstance"/>
+                                        <!-- <CanvasJSChart :options="options" ref="chartInstance"/> -->
+                                        <canvas ref="chartInstance"></canvas>
                                     </div>
                                 </div>
                             </q-card-section>
                         </q-card>
-                        <q-card class="q-mt-md">
-                            <q-card-section>This is card</q-card-section>
-                        </q-card>
                     </div>
-                    <div class="col-12 col-sm-12 col-md-5 col-lg-4 col-xl-4 q-px-sm q-my-md">
+                    <div class="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 q-px-sm q-my-md">
                         <q-card>
                             <q-card-section>
                                 <div class="row">

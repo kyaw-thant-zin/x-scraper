@@ -51,7 +51,6 @@ function setChildMenuActive(activeLink) {
 const leftDrawerOpen = ref(false)
 const drawer = leftDrawerOpen
 
-console.log(drawer.value)
 const toggleLeftDrawer = () => {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
