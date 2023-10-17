@@ -16,8 +16,13 @@ const menuList = [
   // },
   {
     label: 'フォロワー',
-    path: '/followers',
+    path: '/x',
     icon: 'mdi-account-group-outline',
+  },
+  {
+    label: 'Instagram',
+    path: '/insta',
+    icon: 'mdi-instagram',
   },
 ]
 
@@ -45,7 +50,13 @@ function setChildMenuActive(activeLink) {
 // trigger sidebar open and close
 const leftDrawerOpen = ref(false)
 const drawer = leftDrawerOpen
+
+console.log(drawer.value)
 const toggleLeftDrawer = () => {
+  leftDrawerOpen.value = !leftDrawerOpen.value
+}
+
+const closeNav = () => {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
 
@@ -66,21 +77,26 @@ const signout = async () => {
 <template>
     <q-header bordered class="p-hd hd">
       <q-toolbar>
-        <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
         <q-toolbar-title>
           X Scraper
         </q-toolbar-title>
         <q-space />
         <q-btn size="md" flat class="q-ml-md" @click="signout()" icon="mdi-logout-variant"></q-btn>
+        <template v-if="leftDrawerOpen">
+          <q-btn dense flat round icon="mdi-close" @click="toggleLeftDrawer" />
+        </template>
+        <template v-else>
+          <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
+        </template>
       </q-toolbar>
     </q-header>
   
-    <q-drawer class="l-sb" show-if-above v-model="drawer" side="left" bordered :width="245">
+    <q-drawer class="l-sb" overlay side="left" behavior="mobile" elevated v-model="leftDrawerOpen" :width="245">
       <q-scroll-area class="fit">
         <q-list>
           <template v-for="(menuItem, index) in menuList" :key="index">
             <div v-if="!menuItem?.hasChild">
-              <router-link :to="menuItem.path" class="p-menu-color">
+              <router-link :to="menuItem.path" class="p-menu-color" @click="closeNav">
                 <q-item :data-activeLink="activeLink" :data-path="menuItem.path" class="q-mt-md" clickable
                   :active="activeLink.includes(menuItem.path)" @click="handleChildMenuClick(menuItem.path)" active-class="active-sb"
                   v-ripple>

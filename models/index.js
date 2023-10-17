@@ -37,18 +37,39 @@ db.sequelize = sequelize
 
 // Tables
 db.users = require('./user.model')(sequelize, DataTypes)
-db.followers = require('./followers.model')(sequelize, DataTypes)
+db.x = require('./x.model')(sequelize, DataTypes)
+db.xDetail = require('./x_detail.model')(sequelize, DataTypes)
+db.insta = require('./insta.model')(sequelize, DataTypes)
+db.instaDetail = require('./insta_detail.model')(sequelize, DataTypes)
 
 
 db.sequelize.sync({ force: false })
 .then(() => console.log('re-sync done!') )
 
 
-db.users.hasMany(db.followers, {
+db.users.hasMany(db.x, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE'
-}) // users => campaign
-db.followers.belongsTo(db.users) // campaign => users
+}) // users => xes
+db.x.belongsTo(db.users) // xes => users
+
+db.x.hasMany(db.xDetail, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+}) // x_details => xes
+db.xDetail.belongsTo(db.x) // xes => x_details
+
+db.users.hasMany(db.insta, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+}) // users => insta
+db.insta.belongsTo(db.users) // insta => users
+
+db.insta.hasMany(db.instaDetail, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+}) // insta_details => insta
+db.instaDetail.belongsTo(db.insta) // insta => insta_details
 
 
 module.exports = db

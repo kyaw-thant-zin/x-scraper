@@ -1,4 +1,4 @@
-// controllers/followers.controller.js
+// controllers/x.controller.js
 
 /**
  * Required External Modules
@@ -14,7 +14,8 @@ const {SCRAPER} = require('../utils/scraper')
 const db = require('../models/index')
 
 
-const Followers = db.followers
+const X = db.x
+const XDetail = db.xDetail
 
 
 // @desc GET /
@@ -28,16 +29,21 @@ const index = asyncHnadler( async (req, res) => {
     //     throw new Error('Please add all fields')
     // }
     const userId = 1
-    let followers = await Followers.findAll({ 
+    let x = await X.findAll({ 
         where: {
             userId: userId
         },
         order: [
             ['id', 'DESC'],
         ],
+        include: {
+            model: XDetail,
+            order: [['id', 'DESC']], 
+            limit: 1 
+        }
     })
 
-    res.json(followers)
+    res.json(x)
 })
 
 const scrapeAndStore = async (data, account , index, length) => {
@@ -45,31 +51,43 @@ const scrapeAndStore = async (data, account , index, length) => {
 
         const io = global.io // Access io as a global variable
         io.emit('create-account', { message: "「"+account+"」のデータの取得を開始します" })
-        const dumpUserProfile = await SCRAPER.puppeteer.getProfile(account, index, length)
+        const dumpUserProfile = await SCRAPER.puppeteer.x.getProfile(account)
         if(dumpUserProfile != null) {
             console.log('prepare for store')
             io.emit('create-account', { message: "「"+account+"」: データをデータベースに保存する準備をする" })
-                // store the data
-                const followerData = {
+                // store the profile
+                const profileData = {
                     userId: data.userId,
                     account: account,
-                    following: dumpUserProfile.followings_count,
-                    followers: dumpUserProfile.followers_count,
-                    friends: dumpUserProfile.favourites_count,
-                    media_count: dumpUserProfile.media_count,
-                    name: dumpUserProfile.name,
                     profile_banner_url: dumpUserProfile.profile_banner_url,
                     profile_image_url_https: dumpUserProfile.profile_image_url_https,
-                    statuses_count: dumpUserProfile.statuses_count,
-                    description: dumpUserProfile.description,
                     tt_created_at: dumpUserProfile.created_at
                 }
 
-                console.log('store: '+account)
-                const follower = await Followers.create(followerData)
-                if(follower) {
+                const x = await X.create(profileData)
+                if(x) {
                     io.emit('create-account', { message: "「"+account+"」: すべて完了！" })
-                    resovle(true)
+
+                    // store the followers
+                    const followerData = {
+                        xId: x.id,
+                        name: dumpUserProfile.name,
+                        following: dumpUserProfile.followings_count,
+                        followers: dumpUserProfile.followers_count,
+                        friends: dumpUserProfile.favourites_count,
+                        media_count: dumpUserProfile.media_count,
+                        statuses_count: dumpUserProfile.statuses_count,
+                        description: dumpUserProfile.description,
+                    }
+    
+                    const xDetail = await XDetail.create(followerData)
+                    if(xDetail) {
+                        resovle(true)
+                    } else {
+                        io.emit('create-account', { message: "スキップされました:「"+account+"」のデータを取得できません" })
+                        resovle(false)
+                    }
+
                 } else {
                     resovle(false)
                 }
@@ -82,8 +100,8 @@ const scrapeAndStore = async (data, account , index, length) => {
     
 }
 
-// @desc POST store followers
-// @route POST /followers/store
+// @desc POST store X
+// @route POST /X/store
 // @access Private
 const store = asyncHnadler( async (req, res) => {
     const data = req.body
@@ -170,31 +188,31 @@ const store = asyncHnadler( async (req, res) => {
     
 })
 
-// @desc GET followers detail
-// @route GET /followers/:id/detail
+// @desc GET X detail
+// @route GET /X/:id/detail
 // @access Private
 const detail = asyncHnadler( async (req, res) => {
     const data = req.params
     if(data?.id && data.id != null) {
-        let follower = await Followers.findOne({
+        let x = await X.findOne({
             where: {
                 id: data.id,
             }
         })
-        res.send(follower)
+        res.send(x)
     } else {
         res.send(null)
     }
 
 })
 
-// @desc DELETE followers destroy
-// @route DELETE /followers/:id/destroy
+// @desc DELETE X destroy
+// @route DELETE /X/:id/destroy
 // @access Private
 const destroy = asyncHnadler( async (req, res) => {
     const data = req.params
     if(data?.id && data.id != null) {
-        const result = await Followers.destroy({
+        const result = await X.destroy({
             where: {
                 id: data.id
             }
@@ -214,7 +232,7 @@ const destroy = asyncHnadler( async (req, res) => {
 })
 
 // @desc POST refresh all accounts
-// @route POST /followers/refresh
+// @route POST /X/refresh
 // @access Private
 const refresh = asyncHnadler( async (req, res) => {
 
@@ -224,7 +242,7 @@ const refresh = asyncHnadler( async (req, res) => {
 
     // get all accounts
     const userId = 1
-    let followers = await Followers.findAll({ 
+    let x = await X.findAll({ 
         where: {
             userId: userId
         },
@@ -235,12 +253,12 @@ const refresh = asyncHnadler( async (req, res) => {
 
     let success = true
 
-    for (let index = 0; index < followers.length; index++) {
+    for (let index = 0; index < x.length; index++) {
         
         // get account data
-        const follower = followers[index]
+        const follower = x[index]
         const account = follower.account
-        const userProfile = await SCRAPER.puppeteer.getProfileRefresh(account, followers.length, index)
+        const userProfile = await SCRAPER.puppeteer.x.getProfile(account)
         console.log(userProfile)
         if(userProfile != null) {
             console.log('prepare for store')
@@ -257,18 +275,18 @@ const refresh = asyncHnadler( async (req, res) => {
                 description: userProfile.description,
             }
             console.log('update')
-            const f = await Followers.update(followerData, {
+            const x = await X.update(followerData, {
                 where: { id: follower.id },
             })
             
 
-            const data = await Followers.findOne({
+            const data = await X.findOne({
                 where: {
                     id: follower.id,
                 }
             })
 
-            if(f) {
+            if(x) {
                 io.emit('refresh-account', { updated: true, data: data})
             }
         } else {

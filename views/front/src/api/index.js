@@ -67,5 +67,11 @@ export const API = {
             return response.data
         },
     },
+    "insta": {
+        "test": async () => {
+            const response = await instance.get(apiURL+'/insta/test', { headers: headers })
+            return response.data
+        },
+    },
 }
 

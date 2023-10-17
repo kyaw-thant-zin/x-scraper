@@ -144,3 +144,11 @@ a {
     margin-top: 0;
     display: inline-block;
 }
+
+.q-field--readonly .q-field__control:before {
+    border-style: solid !important;
+}
+
+.q-col-gap-md {
+    gap: 20px;
+}

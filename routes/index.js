@@ -9,7 +9,8 @@ const multer = require('multer')
 /**
  * Required Internal Modules
  */
-const { index, store, detail, destroy, refresh } = require('../controllers/followers.controller')
+const { index, store, detail, destroy, refresh } = require('../controllers/x.controller')
+const { indexInsta } = require('../controllers/insta.controller')
 const { checkAuth, signIn, signout } = require('../controllers/auth.controller')
 const { requireAuth } = require('../middleware/auth.middleware')
 
@@ -32,6 +33,8 @@ router.post('/followers/store', upload.single('file'), requireAuth, store)
 router.get('/followers/:id/detail', requireAuth, detail)
 router.delete('/followers/:id/destroy', requireAuth, destroy)
 router.post('/followers/refresh', requireAuth, refresh)
+
+router.get('/insta/test', requireAuth, indexInsta)
 
 
 module.exports = router

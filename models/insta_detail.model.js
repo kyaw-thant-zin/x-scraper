@@ -14,28 +14,24 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: sequelize.literal('UUID()'),
             unique: 'uuid',
         },
-        userId: {
+        instaId: {
             type: DataTypes.INTEGER,
             allowNull: true,
             references: {
-                model: 'users',
+                model: 'insta',
                 key: 'id',
                 deferrable: Deferrable.INITIALLY_IMMEDIATE
             }
         },
-        account: {
+        name: {
             type: DataTypes.STRING,
-            allowNull: false
-        },
-        following: {
-            type: DataTypes.STRING,
-            allowNull: true
+            allowNull: true,
         },
         followers: {
             type: DataTypes.STRING,
             allowNull: true,
         },
-        friends: {
+        following: {
             type: DataTypes.STRING,
             allowNull: true
         },
@@ -43,28 +39,8 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: true,
         },
-        name: {
-            type: DataTypes.STRING,
-            allowNull: true,
-        },
-        profile_banner_url: {
-            type: DataTypes.STRING,
-            allowNull: true,
-        },
-        profile_image_url_https: {
-            type: DataTypes.STRING,
-            allowNull: true,
-        },
-        statuses_count: {
-            type: DataTypes.STRING,
-            allowNull: true,
-        },
         description: {
             type: DataTypes.TEXT,
-            allowNull: true,
-        },
-        tt_created_at: {
-            type: DataTypes.STRING,
             allowNull: true,
         },
     }
@@ -75,8 +51,8 @@ module.exports = (sequelize, DataTypes) => {
         updatedAt: 'updateTimestamp'
     }
 
-    const Followers = sequelize.define('followers', modelAttrs, modelOpts)
+    const InstaDetail = sequelize.define('insta_details', modelAttrs, modelOpts)
 
-    return Followers
+    return InstaDetail
 
 }

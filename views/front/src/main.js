@@ -2,6 +2,7 @@ import { createApp, markRaw, onMounted } from 'vue'
 import App from './App.vue'
 import router from './router'
 import { createPinia } from 'pinia'
+import CanvasJSChart from '@canvasjs/vue-charts'
 import { Quasar, Loading, Notify, Dialog } from 'quasar'
 
 // Import icon libraries
@@ -23,7 +24,7 @@ import 'quasar/src/css/index.sass'
 import '@/assets/scss/style.scss'
 
 
-import { useFollowerStore } from '@/stores/Followers'
+import { useXStore } from '@/stores/X'
 
 const pinia = createPinia()
 pinia.use(({ store }) => {
@@ -41,8 +42,9 @@ app.use(Quasar, {
       Dialog
     }, // import Quasar plugins and add here
 })
+app.use(CanvasJSChart)
 
-useFollowerStore().handleRefreshProcess()
+useXStore().handleRefreshProcess()
 
 app.mount('#app')
 

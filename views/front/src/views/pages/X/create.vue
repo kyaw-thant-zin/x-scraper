@@ -1,10 +1,10 @@
 <script setup>
 import { useQuasar } from 'quasar'
 import { ref, watchEffect } from 'vue'
-import { useFollowerStore } from '@/stores/Followers'
+import { useXStore } from '@/stores/X'
 
 const $q = useQuasar()
-const followerStore = useFollowerStore()
+const followerStore = useXStore()
 
 const tab = ref('account')
 const formData = ref({

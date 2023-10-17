@@ -2,10 +2,10 @@
 import { APP } from '@/config.js'
 import { useQuasar } from 'quasar'
 import { ref, onMounted, watchEffect, watch } from 'vue'
-import { useFollowerStore } from '@/stores/Followers'
+import { useXStore } from '@/stores/X'
 
 const $q = useQuasar()
-const followerStore = useFollowerStore()
+const followerStore = useXStore()
 
 const filter = ref('')
 const columns = [
@@ -182,7 +182,7 @@ watchEffect(() => {
                             <div class="row">
                                 <q-btn class="shadow-3 p-common-btn q-mr-md" icon="mdi-refresh" @click="refreshAll"
                                     no-caps />
-                                <q-btn class="shadow-3 p-common-btn" label="新規作成" :to="{ name: 'followers.create' }"
+                                <q-btn class="shadow-3 p-common-btn" label="新規作成" :to="{ name: 'x.create' }"
                                     no-caps />
                             </div>
                         </q-card-section>
@@ -274,7 +274,7 @@ watchEffect(() => {
                                             <div class="row no-wrap justify-center items-center q-gutter-sm">
                                                 <div>
                                                     <router-link
-                                                        :to="{ name: 'followers.detail', params: { id: APP.encryptID(props.row.id) } }">
+                                                        :to="{ name: 'x.detail', params: { id: APP.encryptID(props.row.id) } }">
                                                         <q-btn size="sm" padding="sm" round class="p-common-bg" :disable="props.row.refresh == false ? false:true"
                                                             icon="mdi-note-edit-outline" />
                                                     </router-link>
@@ -297,7 +297,6 @@ watchEffect(() => {
 </template>
 
 <style lang="scss">
-.follower-tbl {}
 
 .loading-opacity {
     opacity: 0.3;

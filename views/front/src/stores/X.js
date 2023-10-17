@@ -7,7 +7,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 
 import { io } from "socket.io-client";
 
-export const useFollowerStore = defineStore("follower", () => {
+export const useXStore = defineStore("x", () => {
   const _loading = ref(false);
   const _success = ref(false);
   const _error = ref(false);
@@ -16,10 +16,10 @@ export const useFollowerStore = defineStore("follower", () => {
   const _createMessage = ref("データを取得中ですのでお待ちください。");
 
   dayjs.extend(relativeTime);
-  // const socket = io(APP.ACTIVE_SITE_URL);
-  const socket = io(APP.ACTIVE_SITE_URL, {
-    path: '/xfollowers/socket.io'
-  });
+  const socket = io(APP.ACTIVE_SITE_URL);
+  // const socket = io(APP.ACTIVE_SITE_URL, {
+  //   path: '/xfollowers/socket.io'
+  // });
 
   socket.on("connect", () => {
     console.log('connected to server....')
@@ -56,14 +56,15 @@ export const useFollowerStore = defineStore("follower", () => {
     const beautifyData = [];
     if (data != null) {
       data.forEach((element) => {
+        console.log(element)
         const dumpData = {};
         dumpData.id = element.id;
         dumpData.refresh = false;
-        dumpData.name = element.name
+        dumpData.name = element?.x_details[0].name
         dumpData.account = element.account;
-        dumpData.followers = element.followers;
-        dumpData.following = element.following;
-        dumpData.media = element.media_count;
+        dumpData.followers = element?.x_details[0].followers;
+        dumpData.following = element?.x_details[0].following;
+        dumpData.media = element?.x_details[0].media_count;
         dumpData.tt_created_at = element.tt_created_at;
         dumpData.last_detection = dayjs(element.updateTimestamp).fromNow();
         dumpData.action = "";
@@ -93,6 +94,7 @@ export const useFollowerStore = defineStore("follower", () => {
   const handleGetAll = async () => {
     storeLoading(true);
     const response = await API.followers.getAll();
+    console.log(response)
     storeLoading(false);
     return storeRows(response);
   };

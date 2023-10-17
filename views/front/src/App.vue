@@ -21,7 +21,7 @@ watchEffect(() => {
 </script>
 
 <template>
-  <q-layout no-header no-footer class="l" view="hHh LpR lff">
+  <q-layout no-header no-footer class="l" view="hHh lpR fFf">
           <CpHeader v-if="authLayout"></CpHeader>
           <q-page-container class="row fit min-height-fit">
             <RouterView v-slot="{ Component }">
