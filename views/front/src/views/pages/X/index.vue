@@ -1,4 +1,5 @@
 <script setup>
+import dayjs from "dayjs"
 import { APP } from '@/config.js'
 import { useQuasar } from 'quasar'
 import { ref, onMounted, watchEffect, watch } from 'vue'
@@ -26,6 +27,7 @@ const columns = [
     { name: 'media', align: 'center', label: 'メディア数', field: 'media', sortable: true },
     { name: 'tt_created_at', align: 'center', label: '作成日', field: 'tt_created_at', sortable: true },
     { name: 'last_detection', align: 'center', label: '最後の検出', field: 'last_detection', sortable: true },
+    { name: 'create', required: false, align: 'center', label: 'create', field: 'creation_time'},
     { name: 'action', align: 'center', label: 'アクション', field: 'action' },
 ]
 const visibileColumns = ['refresh', 'name', 'account', 'followers', 'following', 'media', 'tt_created_at', 'last_detection', 'action']
@@ -78,6 +80,29 @@ function showConfirmDialog(row) {
 }
 
 const customSort = (rows, sortBy, descending) => {
+    
+    if(sortBy == 'last_detection') {
+        return rows.sort((a, b) => {
+            const getARealTime = dayjs(a['creation_time'])
+            const getBRealTime = dayjs(b['creation_time'])
+            console.log(descending ? getBRealTime - getARealTime : getARealTime - getBRealTime)
+            return descending ? getBRealTime - getARealTime : getARealTime - getBRealTime
+        })
+    } else if(sortBy == 'tt_created_at') {
+        return rows.sort((a, b) => {
+            const getARealTime = dayjs(a[sortBy])
+            const getBRealTime = dayjs(b[sortBy])
+            console.log(descending ? getBRealTime - getARealTime : getARealTime - getBRealTime)
+            return descending ? getBRealTime - getARealTime : getARealTime - getBRealTime
+        })
+    } else if(sortBy == 'account' || sortBy == 'name') {
+        return rows.sort((a, b) => {
+            const getA = a[sortBy].toLowerCase()
+            const getB = b[sortBy].toLowerCase()
+            return descending ? getB.localeCompare(getA) : getA.localeCompare(getB)
+        })
+    } 
+
     return rows.sort((a, b) => {
         const aValue = a[sortBy];
         const bValue = b[sortBy];
@@ -94,7 +119,7 @@ const refreshAll = async () => {
         })
     }
 
-    await followerStore.handleRefresh()
+    await followerStore.handleRefreshAll()
 
     setTimeout( async () => {
 
@@ -104,6 +129,38 @@ const refreshAll = async () => {
                 item.refresh = false;
             })
         }
+        if (followerStore._success) {
+            $q.notify({
+                caption: 'アカウントは正常に削除されました。',
+                message: '成功！',
+                type: 'positive',
+                timeout: 1000
+            })
+            followerStore.storeSuccess(false)
+        }
+
+        if (followerStore._error) {
+            $q.notify({
+                caption: 'エラーが発生しました。後でもう一度お試しください。',
+                message: 'エラー！',
+                type: 'negative',
+                timeout: 1000
+            })
+            followerStore.storeError(false)
+        }
+    }, 2000)
+
+}
+
+const refreshOne = async (row) => {
+    row.refresh = true
+    const index = rows.value.findIndex(r => r.id === row.id)
+    await followerStore.handleRefresh(row.account)
+
+    setTimeout( async () => {
+
+        // set table disable
+        rows.value[index].refresh = false
         if (followerStore._success) {
             $q.notify({
                 caption: 'アカウントは正常に削除されました。',
@@ -272,6 +329,10 @@ watchEffect(() => {
                                     <q-td :props="props">
                                         <div :class="props.row.refresh == true ? 'loading-opacity':''">
                                             <div class="row no-wrap justify-center items-center q-gutter-sm">
+                                                <div>
+                                                    <q-btn @click="refreshOne(props.row)" size="sm" padding="sm" round :disable="props.row.refresh == false ? false:true"
+                                                        icon="mdi-refresh" />
+                                                </div>
                                                 <div>
                                                     <router-link
                                                         :to="{ name: 'x.detail', params: { id: APP.encryptID(props.row.id) } }">

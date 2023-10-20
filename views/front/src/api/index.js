@@ -62,8 +62,12 @@ export const API = {
             const response = await instance.delete(apiURL+'/followers/'+id+'/destroy', {headers: headers})
             return response.data
         },
-        "refresh": async () => {
-            const response = await instance.post(apiURL+'/followers/refresh', { headers: headers })
+        "refreshAll": async () => {
+            const response = await instance.post(apiURL+'/followers/refresh-all', { headers: headers })
+            return response.data
+        },
+        "refresh": async (account) => {
+            const response = await instance.post(apiURL+'/followers/refresh/'+account, { headers: headers })
             return response.data
         },
     },

@@ -185,7 +185,6 @@ const updateChart = (updateTitle, custom) => {
 onMounted( async () => {
     // fetch profile
     profile.value = await followerStore.handleGet(id.value)
-
     updateChart(chartViewOptionRef.value)
 
     chart = new Chart(
@@ -302,7 +301,7 @@ onMounted( async () => {
                                 <div class="row">
                                     <div class="col-12 q-mb-lg">
                                         <q-img class="profile-bg" :src="profile.bg"  no-native-menu>
-                                            <img class="absolute-bottom-left q-circle profile-img" :src="profile.img">
+                                            <img class="absolute-bottom-left q-circle profile-img shadow-2" :src="profile.img">
                                         </q-img>
                                     </div>
                                     <div class="col-12 q-px-md profile-text">

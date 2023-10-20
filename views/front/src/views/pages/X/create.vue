@@ -23,15 +23,25 @@ const onSubmit = async () => {
   await followerStore.handleStore(formData.value)
 
   if (followerStore._success) {
-    $q.notify({
-      caption: 'アカウントが正常に作成されました。',
-      message: '成功！',
-      type: 'positive',
-      timeout: 1000
-    })
-    followerStore.storeSuccess(false)
-    resetForm()
-    followerStore.router.replace({ name: 'followers.index' })
+    if(!followerStore._unique) {
+      $q.notify({
+        caption: 'アカウントが正常に作成されました。',
+        message: '成功！',
+        type: 'positive',
+        timeout: 1000
+      })
+      followerStore.storeSuccess(false)
+      resetForm()
+      followerStore.router.replace({ name: 'x.index' })
+    } else {
+      $q.notify({
+        caption: 'この名前ですでに存在します。',
+        message: 'エラー！',
+        type: 'negative',
+        timeout: 1000
+      })
+      followerStore.storeError(false)
+    }
   }
 
   if (followerStore._error) {

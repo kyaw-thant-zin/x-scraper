@@ -10,6 +10,7 @@ import { io } from "socket.io-client";
 export const useXStore = defineStore("x", () => {
   const _loading = ref(false);
   const _success = ref(false);
+  const _unique = ref(false)
   const _error = ref(false);
   const _followers = ref(null);
   const _follower = ref(null);
@@ -31,6 +32,10 @@ export const useXStore = defineStore("x", () => {
 
   const storeError = (error) => {
     _error.value = error;
+  };
+
+  const storeUnique = (unique) => {
+    _unique.value = unique;
   };
 
   const storeSuccess = (success) => {
@@ -66,6 +71,7 @@ export const useXStore = defineStore("x", () => {
         dumpData.media = element?.x_details[0].media_count;
         dumpData.tt_created_at = element.tt_created_at;
         dumpData.last_detection = dayjs(element.updateTimestamp).fromNow();
+        dumpData.creation_time = element.updateTimestamp
         dumpData.action = "";
         beautifyData.push(dumpData);
       });
@@ -74,24 +80,37 @@ export const useXStore = defineStore("x", () => {
   };
 
   const storeDetail = (data) => {
+
+    let lastIndexXDetail = data?.x_details.length - 1
+
     const profile = {
       bg: data?.profile_banner_url,
       img: data?.profile_image_url_https,
-      name: data?.x_details[0].name,
+      name: data?.x_details[lastIndexXDetail].name,
       account: data?.account,
-      desc: data?.x_details[0].description,
-      following: data?.x_details[0].following,
-      followers: data?.x_details[0].followers,
-      friends: data?.x_details[0].friends,
-      media: data?.x_details[0].media_count,
-      statuses: data?.x_details[0].statuses_count,
+      desc: data?.x_details[lastIndexXDetail].description,
+      following: data?.x_details[lastIndexXDetail].following,
+      followers: data?.x_details[lastIndexXDetail].followers,
+      friends: data?.x_details[lastIndexXDetail].friends,
+      media: data?.x_details[lastIndexXDetail].media_count,
+      statuses: data?.x_details[lastIndexXDetail].statuses_count,
       joined: data?.tt_created_at,
       chart: []
     };
 
     if(data?.x_details.length > 0) {
+      
+      const latestRecordsByDate = {};
+      for (const record of data.x_details) {
+        const date = dayjs(record.createTimestamp).format('YYYY-MM-DD'); // Extract the date (year-month-day)
 
-      data.x_details.forEach((ele) => {
+        if (!latestRecordsByDate[date] || dayjs(latestRecordsByDate[date].createTimestamp).isBefore(record.createTimestamp)) {
+          latestRecordsByDate[date] = record;
+        }
+      }
+    
+      const latestData = Object.values(latestRecordsByDate);
+      latestData.forEach((ele) => {
 
         const parsedDate = dayjs(ele.createTimestamp)
         const dumpEle = {
@@ -139,6 +158,13 @@ export const useXStore = defineStore("x", () => {
     } else {
       storeError(true);
     }
+
+    if(response?.unique) {
+      storeUnique(true)
+    } else {
+      storeUnique(false)
+    }
+
     storeLoading(false);
   };
 
@@ -161,9 +187,20 @@ export const useXStore = defineStore("x", () => {
     });
   };
 
-  const handleRefresh = async () => {
+  const handleRefreshAll = async () => {
     // storeLoading(true)
-    const response = await API.followers.refresh()
+    const response = await API.followers.refreshAll()
+    if (response?.success) {
+      storeSuccess(true)
+    } else {
+      storeError(true)
+    }
+    // storeLoading(false)
+  };
+
+  const handleRefresh = async (account) => {
+    // storeLoading(true)
+    const response = await API.followers.refresh(account)
     if (response?.success) {
       storeSuccess(true)
     } else {
@@ -176,6 +213,7 @@ export const useXStore = defineStore("x", () => {
     _followers,
     _follower,
     _success,
+    _unique,
     _error,
     _loading,
     _createMessage,
@@ -186,6 +224,7 @@ export const useXStore = defineStore("x", () => {
     handleStore,
     handleDestroy,
     handleRefresh,
+    handleRefreshAll,
     handleRefreshProcess,
   };
 });

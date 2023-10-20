@@ -32,7 +32,8 @@ router.get('/followers', requireAuth, index)
 router.post('/followers/store', upload.single('file'), requireAuth, store)
 router.get('/followers/:id/detail', requireAuth, detail)
 router.delete('/followers/:id/destroy', requireAuth, destroy)
-router.post('/followers/refresh', requireAuth, refresh)
+router.post('/followers/refresh-all', requireAuth, refresh)
+router.post('/followers/refresh/:account', requireAuth, refresh)
 
 router.get('/insta/test', requireAuth, indexInsta)
 

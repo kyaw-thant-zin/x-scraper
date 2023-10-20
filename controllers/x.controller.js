@@ -46,7 +46,7 @@ const index = asyncHnadler( async (req, res) => {
     res.json(x)
 })
 
-const scrapeAndStore = async (data, account , index, length) => {
+const scrapeAndStore = async (userId, account) => {
     return new Promise(async (resovle, reject) => {
 
         const io = global.io // Access io as a global variable
@@ -57,7 +57,7 @@ const scrapeAndStore = async (data, account , index, length) => {
             io.emit('create-account', { message: "「"+account+"」: データをデータベースに保存する準備をする" })
                 // store the profile
                 const profileData = {
-                    userId: data.userId,
+                    userId: userId,
                     account: account,
                     profile_banner_url: dumpUserProfile.profile_banner_url,
                     profile_image_url_https: dumpUserProfile.profile_image_url_https,
@@ -106,6 +106,7 @@ const scrapeAndStore = async (data, account , index, length) => {
 const store = asyncHnadler( async (req, res) => {
     const data = req.body
     const file = req.file
+    const io = global.io // Access io as a global variable
 
     let dataArray = []
 
@@ -113,7 +114,7 @@ const store = asyncHnadler( async (req, res) => {
         
         if((data?.account && data.account != null) && (data?.userId && data.userId != null)) {
     
-            dataArray = data.account.includes(',') ? data.account.split(',') : [data.account]
+            dataArray = data.account.includes(',') ? data.account.replace(/\s/g, '').split(',') : [data.account.replace(/\s/g, '')]
 
         } else {
             res.json({success: false})
@@ -145,12 +146,12 @@ const store = asyncHnadler( async (req, res) => {
                     }
                     value = value.replace('https://twitter.com/', '')
                     if(value != '') {
-                        dataArray.push(value)
+                        dataArray.push(value.replace(/\s/g, ''))
                     }
                 } else {
                     value = value.replace('https://twitter.com/', '')
                     if(value != '') {
-                        dataArray.push(value)
+                        dataArray.push(value.replace(/\s/g, ''))
                     }
                 }
             }
@@ -160,9 +161,9 @@ const store = asyncHnadler( async (req, res) => {
                 const columns = line.replace('\r', '').split(',');
                 if (columns.length === 1 && columns[0] !== '') {
                     // Handle single-item arrays
-                    dataArray.push(columns[0].replace('https://twitter.com/', ''));
+                    dataArray.push(columns[0].replace('https://twitter.com/', '').replace(/\s/g, ''));
                 } else {
-                    dataArray.push(columns.replace('https://twitter.com/', ''));
+                    dataArray.push(columns.replace('https://twitter.com/', '').replace(/\s/g, ''));
                 }
             });
 
@@ -172,14 +173,36 @@ const store = asyncHnadler( async (req, res) => {
     }
 
     console.log(dataArray)
+    let checkUnique = false
 
     if(Array.isArray(dataArray) && dataArray.length > 0) {
     
         for(let i = 0; i < dataArray.length; i++) {
-            await scrapeAndStore(data, dataArray[i], i, dataArray.length)
+
+            // check account unique
+            let x = await X.findOne({
+                where: {
+                    account: dataArray[i],
+                }
+            })
+            
+            if(x) {
+                io.emit('create-account', { message: "「"+dataArray[i]+"」はこの名前ですでに存在します。スキップしています..." })
+                if(dataArray.length <= 1) {
+                    checkUnique = true
+                }
+            } else {
+                await scrapeAndStore(data.userId, dataArray[i])
+            }
+
         }
         console.log('finished.....')
-        res.json({success: true})
+        
+        if(checkUnique) {
+            res.json({success: true, unique: true})
+        } else {
+            res.json({success: true})
+        }
 
     } else {
         res.json({success: false})
@@ -200,7 +223,6 @@ const detail = asyncHnadler( async (req, res) => {
             },
             include: {
                 model: XDetail,
-                order: [['id', 'DESC']], 
             }
         })
         res.send(x)
@@ -240,20 +262,29 @@ const destroy = asyncHnadler( async (req, res) => {
 // @access Private
 const refresh = asyncHnadler( async (req, res) => {
 
-    // get the data and do not close browser but update the data first and then fetch the new 
-
+    const data = req.params
     const io = global.io // Access io as a global variable
 
     // get all accounts
-    const userId = 1
-    let x = await X.findAll({ 
-        where: {
-            userId: userId
-        },
-        order: [
-            ['id', 'DESC'],
-        ],
-    })
+    let x = []
+    if(data?.account && data.account != null) {
+        let dumpX = await X.findOne({
+            where: {
+                account: data.account,
+            },
+        })
+        x.push(dumpX)
+    } else {
+        const userId = 1
+        x = await X.findAll({ 
+            where: {
+                userId: userId
+            },
+            order: [
+                ['id', 'DESC'],
+            ],
+        })
+    }
 
     let success = true
 

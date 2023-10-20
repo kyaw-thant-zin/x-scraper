@@ -15,9 +15,9 @@ const menuList = [
   //   icon: 'mdi-home-variant-outline',
   // },
   {
-    label: 'フォロワー',
+    label: 'X',
     path: '/x',
-    icon: 'mdi-account-group-outline',
+    icon: 'mdi-alpha-x',
   },
   {
     label: 'Instagram',
@@ -76,21 +76,21 @@ const signout = async () => {
 <template>
     <q-header bordered class="p-hd hd">
       <q-toolbar>
-        <q-toolbar-title>
-          X Scraper
-        </q-toolbar-title>
-        <q-space />
-        <q-btn size="md" flat class="q-ml-md" @click="signout()" icon="mdi-logout-variant"></q-btn>
         <template v-if="leftDrawerOpen">
           <q-btn dense flat round icon="mdi-close" @click="toggleLeftDrawer" />
         </template>
         <template v-else>
           <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
         </template>
+        <q-toolbar-title>
+          SNS Scraper
+        </q-toolbar-title>
+        <q-space />
+        <q-btn size="md" flat class="q-ml-md" @click="signout()" icon="mdi-logout-variant"></q-btn>
       </q-toolbar>
     </q-header>
   
-    <q-drawer class="l-sb" overlay side="left" behavior="mobile" elevated v-model="leftDrawerOpen" :width="245">
+    <q-drawer class="l-sb" overlay side="left" behavior="desktop" elevated v-model="leftDrawerOpen" :width="245">
       <q-scroll-area class="fit">
         <q-list>
           <template v-for="(menuItem, index) in menuList" :key="index">
