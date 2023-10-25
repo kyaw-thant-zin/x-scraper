@@ -50,30 +50,39 @@ export const API = {
             return response.data
         },
         "getAll": async () => {
-            const response = await instance.get(apiURL+'/followers', { headers: headers })
+            const response = await instance.get(apiURL+'/x', { headers: headers })
             return response.data
         },
         "store": async (formData) => {
             headers['Content-Type'] = 'multipart/form-data'
-            const response = await instance.post(apiURL+'/followers/store', formData, {headers: headers})
+            const response = await instance.post(apiURL+'/x/store', formData, {headers: headers})
             return response.data
         },
         "destroy": async (id) => {
-            const response = await instance.delete(apiURL+'/followers/'+id+'/destroy', {headers: headers})
+            const response = await instance.delete(apiURL+'/x/'+id+'/destroy', {headers: headers})
             return response.data
         },
         "refreshAll": async () => {
-            const response = await instance.post(apiURL+'/followers/refresh-all', { headers: headers })
+            const response = await instance.post(apiURL+'/x/refresh-all', { headers: headers })
             return response.data
         },
         "refresh": async (account) => {
-            const response = await instance.post(apiURL+'/followers/refresh/'+account, { headers: headers })
+            const response = await instance.post(apiURL+'/x/refresh/'+account, { headers: headers })
             return response.data
         },
     },
     "insta": {
-        "test": async () => {
-            const response = await instance.get(apiURL+'/insta/test', { headers: headers })
+        "get": async (id) => {
+            const response = await instance.get(apiURL+'/insta/'+id+'/detail', { headers: headers })
+            return response.data
+        },
+        "getAll": async () => {
+            const response = await instance.get(apiURL+'/insta', { headers: headers })
+            return response.data
+        },
+        "store": async (formData) => {
+            headers['Content-Type'] = 'multipart/form-data'
+            const response = await instance.post(apiURL+'/insta/store', formData, {headers: headers})
             return response.data
         },
     },

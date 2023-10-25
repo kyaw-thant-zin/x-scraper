@@ -28,11 +28,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         },
         profile_banner_url: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: true,
         },
         profile_image_url_https: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: true,
         },
         tt_created_at: {

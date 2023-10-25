@@ -8,6 +8,8 @@ import XCreate from "@/views/pages/X/create.vue";
 import XDetail from "@/views/pages/X/detail.vue";
 
 import InstaIndex from "@/views/pages/Insta/index.vue";
+import InstaCreate from "@/views/pages/Insta/create.vue";
+import InstaDetail from "@/views/pages/Insta/detail.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -55,13 +57,25 @@ const router = createRouter({
       ],
     },
     {
-      path: "/insta",
+      path: "/ig",
       name: "insta",
       children: [
         {
           path: "",
           name: "insta.index",
           component: InstaIndex,
+          meta: { requiresAuth: true, authLayout: true },
+        },
+        {
+          path: "create",
+          name: "insta.create",
+          component: InstaCreate,
+          meta: { requiresAuth: true, authLayout: true },
+        },
+        {
+          path: ":id/detail",
+          name: "insta.detail",
+          component: InstaDetail,
           meta: { requiresAuth: true, authLayout: true },
         },
       ],

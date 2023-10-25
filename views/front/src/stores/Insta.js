@@ -53,19 +53,19 @@ export const useInstaStore = defineStore("insta", () => {
   };
 
   const storeRows = (data) => {
-    const beautifyData = [];
-    if (data != null) {
+    const beautifyData = []
+    if (data && data != null) {
       data.forEach((element) => {
         const dumpData = {};
         dumpData.id = element.id;
         dumpData.refresh = false;
-        dumpData.name = element.name
-        dumpData.account = element.account;
-        dumpData.followers = element.followers;
-        dumpData.following = element.following;
-        dumpData.media = element.media_count;
-        dumpData.tt_created_at = element.tt_created_at;
-        dumpData.last_detection = dayjs(element.updateTimestamp).fromNow();
+        dumpData.name = element.insta_details[0].name
+        dumpData.account = element.username
+        dumpData.followers = element.insta_details[0].followers
+        dumpData.following = element.insta_details[0].following
+        dumpData.media = element.insta_details[0].media_count
+        dumpData.last_detection = dayjs(element.updateTimestamp).fromNow()
+        dumpData.creation_time = element.updateTimestamp
         dumpData.action = "";
         beautifyData.push(dumpData);
       });
@@ -74,32 +74,68 @@ export const useInstaStore = defineStore("insta", () => {
   };
 
   const storeDetail = (data) => {
-    const profile = {
-      bg: data?.profile_banner_url,
-      img: data?.profile_image_url_https,
-      name: data?.name,
-      account: data?.account,
-      desc: data?.description,
-      following: data?.following,
-      followers: data?.followers,
-      friends: data?.friends,
-      media: data?.media_count,
-      statuses: data?.statuses_count,
-      joined: data?.tt_created_at,
-    };
-    return profile;
+
+    if(data && data != null) {
+
+      let lastIndexXDetail = data?.insta_details.length - 1
+      
+      const profile = {
+        img: data.profile_image_url,
+        name: data?.insta_details[lastIndexXDetail].name,
+        account: data.username,
+        desc: data?.insta_details[lastIndexXDetail].description,
+        following: data?.insta_details[lastIndexXDetail].following,
+        followers: data?.insta_details[lastIndexXDetail].followers,
+        media: data?.insta_details[lastIndexXDetail].media_count,
+        chart: []
+      };
+
+
+      if(data?.insta_details.length > 0) {
+
+        const latestRecordsByDate = {};
+        for (const record of data.insta_details) {
+          const date = dayjs(record.createTimestamp).format('YYYY-MM-DD'); // Extract the date (year-month-day)
+
+          if (!latestRecordsByDate[date] || dayjs(latestRecordsByDate[date].createTimestamp).isBefore(record.createTimestamp)) {
+            latestRecordsByDate[date] = record;
+          }
+        }
+
+        const latestData = Object.values(latestRecordsByDate);
+        latestData.forEach((ele) => {
+
+          const parsedDate = dayjs(ele.createTimestamp)
+          const dumpEle = {
+            year: parsedDate.year(),
+            month: parsedDate.format('MM'),
+            dayOfWeek: parsedDate.format('ddd'),
+            day: parsedDate.date(),
+            date: parsedDate.format('YYYY/MM/DD'),
+            y: ele.followers
+          }
+
+          profile.chart.push(dumpEle)
+
+        })
+
+      }
+
+      return profile;
+    }
+
   };
 
   const handleGetAll = async () => {
     storeLoading(true);
-    const response = await API.followers.getAll();
+    const response = await API.insta.getAll();
     storeLoading(false);
     return storeRows(response);
   };
 
   const handleGet = async (id) => {
     storeLoading(true);
-    const response = await API.followers.get(id);
+    const response = await API.insta.get(id);
     storeLoading(false);
     return storeDetail(response);
   };
@@ -111,7 +147,7 @@ export const useInstaStore = defineStore("insta", () => {
       _createMessage.value = res.message
     });
 
-    const response = await API.followers.store(formData);
+    const response = await API.insta.store(formData);
     if (response?.success) {
       storeSuccess(true);
     } else {
@@ -122,7 +158,7 @@ export const useInstaStore = defineStore("insta", () => {
 
   const handleDestroy = async (id) => {
     storeLoading(true);
-    const response = await API.followers.destroy(id);
+    const response = await API.insta.destroy(id);
     if (response?.success) {
       storeSuccess(true);
     } else {
@@ -141,7 +177,7 @@ export const useInstaStore = defineStore("insta", () => {
 
   const handleRefresh = async () => {
     // storeLoading(true)
-    const response = await API.followers.refresh()
+    const response = await API.insta.refresh()
     if (response?.success) {
       storeSuccess(true)
     } else {
@@ -149,11 +185,6 @@ export const useInstaStore = defineStore("insta", () => {
     }
     // storeLoading(false)
   };
-
-  const handleTest = async () => {
-    const response = await API.insta.test()
-    console.log(response)
-  }
 
   return {
     _instas,
@@ -170,6 +201,5 @@ export const useInstaStore = defineStore("insta", () => {
     handleDestroy,
     handleRefresh,
     handleRefreshProcess,
-    handleTest
   };
 });

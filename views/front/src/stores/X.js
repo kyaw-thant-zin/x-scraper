@@ -81,54 +81,58 @@ export const useXStore = defineStore("x", () => {
 
   const storeDetail = (data) => {
 
-    let lastIndexXDetail = data?.x_details.length - 1
+    if(data && data != null) {
+      let lastIndexXDetail = data?.x_details.length - 1
 
-    const profile = {
-      bg: data?.profile_banner_url,
-      img: data?.profile_image_url_https,
-      name: data?.x_details[lastIndexXDetail].name,
-      account: data?.account,
-      desc: data?.x_details[lastIndexXDetail].description,
-      following: data?.x_details[lastIndexXDetail].following,
-      followers: data?.x_details[lastIndexXDetail].followers,
-      friends: data?.x_details[lastIndexXDetail].friends,
-      media: data?.x_details[lastIndexXDetail].media_count,
-      statuses: data?.x_details[lastIndexXDetail].statuses_count,
-      joined: data?.tt_created_at,
-      chart: []
-    };
+      const profile = {
+        bg: data?.profile_banner_url,
+        img: data?.profile_image_url_https,
+        name: data?.x_details[lastIndexXDetail].name,
+        account: data?.account,
+        desc: data?.x_details[lastIndexXDetail].description,
+        following: data?.x_details[lastIndexXDetail].following,
+        followers: data?.x_details[lastIndexXDetail].followers,
+        friends: data?.x_details[lastIndexXDetail].friends,
+        media: data?.x_details[lastIndexXDetail].media_count,
+        statuses: data?.x_details[lastIndexXDetail].statuses_count,
+        joined: data?.tt_created_at,
+        chart: []
+      };
 
-    if(data?.x_details.length > 0) {
+      if(data?.x_details.length > 0) {
+        
+        const latestRecordsByDate = {};
+        for (const record of data.x_details) {
+          const date = dayjs(record.createTimestamp).format('YYYY-MM-DD'); // Extract the date (year-month-day)
+
+          if (!latestRecordsByDate[date] || dayjs(latestRecordsByDate[date].createTimestamp).isBefore(record.createTimestamp)) {
+            latestRecordsByDate[date] = record;
+          }
+        }
       
-      const latestRecordsByDate = {};
-      for (const record of data.x_details) {
-        const date = dayjs(record.createTimestamp).format('YYYY-MM-DD'); // Extract the date (year-month-day)
+        const latestData = Object.values(latestRecordsByDate);
+        latestData.forEach((ele) => {
 
-        if (!latestRecordsByDate[date] || dayjs(latestRecordsByDate[date].createTimestamp).isBefore(record.createTimestamp)) {
-          latestRecordsByDate[date] = record;
-        }
+          const parsedDate = dayjs(ele.createTimestamp)
+          const dumpEle = {
+            year: parsedDate.year(),
+            month: parsedDate.format('MM'),
+            dayOfWeek: parsedDate.format('ddd'),
+            day: parsedDate.date(),
+            date: parsedDate.format('YYYY/MM/DD'),
+            y: ele.followers
+          }
+
+          profile.chart.push(dumpEle)
+
+        })
+
       }
-    
-      const latestData = Object.values(latestRecordsByDate);
-      latestData.forEach((ele) => {
 
-        const parsedDate = dayjs(ele.createTimestamp)
-        const dumpEle = {
-          year: parsedDate.year(),
-          month: parsedDate.format('MM'),
-          dayOfWeek: parsedDate.format('ddd'),
-          day: parsedDate.date(),
-          date: parsedDate.format('YYYY/MM/DD'),
-          y: ele.followers
-        }
-
-        profile.chart.push(dumpEle)
-
-      })
-
+      return profile;
     }
 
-    return profile;
+    return null
   };
 
   const handleGetAll = async () => {

@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         },
         profile_image_url: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: true,
         },
     }

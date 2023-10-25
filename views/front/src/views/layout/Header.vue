@@ -21,7 +21,7 @@ const menuList = [
   },
   {
     label: 'Instagram',
-    path: '/insta',
+    path: '/ig',
     icon: 'mdi-instagram',
   },
 ]

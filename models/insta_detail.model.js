@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: sequelize.literal('UUID()'),
             unique: 'uuid',
         },
-        instaId: {
+        instumId: {
             type: DataTypes.INTEGER,
             allowNull: true,
             references: {
