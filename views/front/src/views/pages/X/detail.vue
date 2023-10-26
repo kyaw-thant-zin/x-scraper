@@ -127,30 +127,22 @@ const updateChart = (updateTitle, custom) => {
                 })
             }
         } else if(updateTitle == '週ごと') { // weekly
-            const weeklyDates = []
-            let startOfWeek1 = startOfMonth.startOf('week')
-            while (startOfWeek1.isBefore(endOfMonth)) {
-                let endOfWeek = startOfWeek1.clone().endOf('week')
-                if (endOfWeek.isAfter(endOfMonth)) {
-                    endOfWeek = endOfMonth
-                }
-                weeklyDates.push(endOfWeek.format('YYYY/MM/DD'))
-                startOfWeek1 = endOfWeek.add(1, 'day')
-            }
-
-            const weeksInCurrentMonth = profile.value.chart.filter(dateObj => {
-                return weeklyDates.includes(dateObj.date)
-            })
-
-            if(weeksInCurrentMonth && weeksInCurrentMonth.length > 0) {
-                weeksInCurrentMonth.forEach((ele) => {
-                    const dumpData = {
-                        'label': ele.month+'/'+ele.day,
-                        'y': Number(ele.y)
+            const weeklyDataPoints = {}
+            // Group data by week
+            profile.value.chart.forEach(dateObj => {
+                const date = dayjs(dateObj.date, 'YYYY/MM/DD')
+                const weekStart = date.startOf('week').format('YYYY/MM/DD')
+                
+                if (!weeklyDataPoints[weekStart] || date.isAfter(dayjs(weeklyDataPoints[weekStart].date, 'YYYY/MM/DD'))) {
+                    weeklyDataPoints[weekStart] = {
+                        label: date.format('MM/DD'),
+                        y: Number(dateObj.y),
                     }
-                    followersDataPoints.value.push(dumpData)
-                })
-            }
+                }
+            })
+            // Convert the grouped data to an array
+            const weeksInCurrentMonth = Object.values(weeklyDataPoints)
+            followersDataPoints.value = weeksInCurrentMonth
             
         } else if(updateTitle == '月ごと') { // by month
 

@@ -1,4 +1,4 @@
-// controllers/x.controller.js
+// controllers/insta.controller.js
 
 /**
  * Required External Modules
@@ -14,14 +14,14 @@ const {SCRAPER} = require('../utils/scraper')
 const db = require('../models/index')
 
 
-const X = db.x
-const XDetail = db.xDetail
+const Tt = db.tt
+const TtDetail = db.ttDetail
 
 
 // @desc GET /
 // @route GET /
 // @access Private
-const index = asyncHnadler( async (req, res) => {
+const indexTt = asyncHnadler( async (req, res) => {
     // const {userId} = req.body
 
     // if(!userId) {
@@ -29,7 +29,7 @@ const index = asyncHnadler( async (req, res) => {
     //     throw new Error('Please add all fields')
     // }
     const userId = 1
-    let x = await X.findAll({ 
+    let x = await Tt.findAll({ 
         where: {
             userId: userId
         },
@@ -37,73 +37,73 @@ const index = asyncHnadler( async (req, res) => {
             ['id', 'DESC'],
         ],
         include: {
-            model: XDetail,
+            model: TtDetail,
             order: [['id', 'DESC']], 
             limit: 1 
         }
     })
 
     res.json(x)
+    
 })
 
 const scrapeAndStore = async (userId, account) => {
     return new Promise(async (resovle, reject) => {
 
         const io = global.io // Access io as a global variable
-        io.emit('create-account', { message: "「"+account+"」のデータの取得を開始します" })
-        const dumpUserProfile = await SCRAPER.puppeteer.x.getProfile(account)
+        io.emit('create-account-tt', { message: "「"+account+"」のデータの取得を開始します" })
+        const dumpUserProfile = await SCRAPER.puppeteer.tt.getProfile(account)
         if(dumpUserProfile != null) {
             console.log('prepare for store')
-            io.emit('create-account', { message: "「"+account+"」: データをデータベースに保存する準備をする" })
+            io.emit('create-account-tt', { message: "「"+account+"」: データをデータベースに保存する準備をする" })
                 // store the profile
-                const profileData = {
-                    userId: userId,
-                    account: account,
-                    profile_banner_url: dumpUserProfile.profile_banner_url,
-                    profile_image_url_https: dumpUserProfile.profile_image_url_https,
-                    tt_created_at: dumpUserProfile.created_at
+            const profileData = {
+                userId: userId,
+                uniqueId: account,
+                avatar: dumpUserProfile.avatar,
+            }
+
+            const tt = await Tt.create(profileData)
+            if(tt) {
+                io.emit('create-account-tt', { message: "「"+account+"」: すべて完了！" })
+
+                // store the followers
+                const followerData = {
+                    ttId: tt.id,
+                    nickname: dumpUserProfile.nickname,
+                    following: dumpUserProfile.followings_count,
+                    followers: dumpUserProfile.followers_count,
+                    friends: dumpUserProfile.friends_count,
+                    likes_count: dumpUserProfile.likes_count,
+                    media_count: dumpUserProfile.video_count,
+                    description: dumpUserProfile.description,
+                    biolink: dumpUserProfile.bioLink,
                 }
-
-                const x = await X.create(profileData)
-                if(x) {
-                    io.emit('create-account', { message: "「"+account+"」: すべて完了！" })
-
-                    // store the followers
-                    const followerData = {
-                        xId: x.id,
-                        name: dumpUserProfile.name,
-                        following: dumpUserProfile.followings_count,
-                        followers: dumpUserProfile.followers_count,
-                        friends: dumpUserProfile.favourites_count,
-                        media_count: dumpUserProfile.media_count,
-                        statuses_count: dumpUserProfile.statuses_count,
-                        description: dumpUserProfile.description,
-                    }
     
-                    const xDetail = await XDetail.create(followerData)
-                    if(xDetail) {
-                        resovle(true)
-                    } else {
-                        io.emit('create-account', { message: "スキップされました:「"+account+"」のデータを取得できません" })
-                        resovle(false)
-                    }
-
+                const ttDetail = await TtDetail.create(followerData)
+                if(ttDetail) {
+                    resovle(true)
                 } else {
+                    io.emit('create-account-tt', { message: "スキップされました:「"+account+"」のデータを取得できません" })
                     resovle(false)
                 }
 
             } else {
-                io.emit('create-account', { message: "スキップされました:「"+account+"」のデータを取得できません" })
                 resovle(false)
             }
+
+        } else {
+            io.emit('create-account-tt', { message: "スキップされました:「"+account+"」のデータを取得できません" })
+            resovle(false)
+        }
     })
     
 }
 
-// @desc POST store X
-// @route POST /X/store
+// @desc POST store Tt
+// @route POST /tt/store
 // @access Private
-const store = asyncHnadler( async (req, res) => {
+const storeTt = asyncHnadler( async (req, res) => {
     const data = req.body
     const file = req.file
     const io = global.io // Access io as a global variable
@@ -114,7 +114,7 @@ const store = asyncHnadler( async (req, res) => {
         
         if((data?.account && data.account != null) && (data?.userId && data.userId != null)) {
     
-            dataArray = data.account.includes(',') ? data.account.replace(/\s/g, '').split(',') : [data.account.replace(/\s/g, '')]
+            dataArray = data.account.includes(',') ? data.account.replace(/\s/g, '').replace(/@/g, '').split(',') : [data.account.replace(/\s/g, '').replace(/@/g, '')]
 
         } else {
             res.json({success: false})
@@ -140,18 +140,18 @@ const store = asyncHnadler( async (req, res) => {
                 let value = rowData[key]; // Extracting the value (another URL)
 
                 if(dataArray.length == 0) {
-                    key = key.replace('https://twitter.com/', '').replace(/\s/g, '')
+                    key = key.replace('https://tiktok.com/', '').replace(/\s/g, '').replace(/@/g, '')
                     if(key != '') {
                         dataArray.push(key)
                     }
-                    value = value.replace('https://twitter.com/', '')
+                    value = value.replace('https://tiktok.com/', '')
                     if(value != '') {
-                        dataArray.push(value.replace(/\s/g, ''))
+                        dataArray.push(value.replace(/\s/g, '').replace(/@/g, ''))
                     }
                 } else {
-                    value = value.replace('https://twitter.com/', '')
+                    value = value.replace('https://tiktok.com/', '')
                     if(value != '') {
-                        dataArray.push(value.replace(/\s/g, ''))
+                        dataArray.push(value.replace(/\s/g, '').replace(/@/g, ''))
                     }
                 }
             }
@@ -161,9 +161,9 @@ const store = asyncHnadler( async (req, res) => {
                 const columns = line.replace('\r', '').split(',');
                 if (columns.length === 1 && columns[0] !== '') {
                     // Handle single-item arrays
-                    dataArray.push(columns[0].replace('https://twitter.com/', '').replace(/\s/g, ''));
+                    dataArray.push(columns[0].replace('https://tiktok.com/', '').replace(/\s/g, '').replace(/@/g, ''));
                 } else {
-                    dataArray.push(columns.replace('https://twitter.com/', '').replace(/\s/g, ''));
+                    dataArray.push(columns.replace('https://tiktok.com/', '').replace(/\s/g, '').replace(/@/g, ''));
                 }
             });
 
@@ -181,14 +181,14 @@ const store = asyncHnadler( async (req, res) => {
         for(let i = 0; i < dataArray.length; i++) {
 
             // check account unique
-            let x = await X.findOne({
+            let x = await Tt.findOne({
                 where: {
-                    account: dataArray[i],
+                    uniqueId: dataArray[i],
                 }
             })
             
             if(x) {
-                io.emit('create-account', { message: "「"+dataArray[i]+"」はこの名前ですでに存在します。スキップしています..." })
+                io.emit('create-account-tt', { message: "「"+dataArray[i]+"」はこの名前ですでに存在します。スキップしています..." })
                 if(dataArray.length <= 1) {
                     checkUnique = true
                 }
@@ -212,18 +212,18 @@ const store = asyncHnadler( async (req, res) => {
     
 })
 
-// @desc GET X detail
-// @route GET /X/:id/detail
+// @desc GET Tt detail
+// @route GET /tt/:id/detail
 // @access Private
-const detail = asyncHnadler( async (req, res) => {
+const detailTt = asyncHnadler( async (req, res) => {
     const data = req.params
     if(data?.id && data.id != null) {
-        let x = await X.findOne({
+        let x = await Tt.findOne({
             where: {
                 id: data.id,
             },
             include: {
-                model: XDetail,
+                model: TtDetail,
             }
         })
         res.send(x)
@@ -233,13 +233,13 @@ const detail = asyncHnadler( async (req, res) => {
 
 })
 
-// @desc DELETE X destroy
-// @route DELETE /X/:id/destroy
+// @desc DELETE Tt destroy
+// @route DELETE /tt/:id/destroy
 // @access Private
-const destroy = asyncHnadler( async (req, res) => {
+const destroyTt = asyncHnadler( async (req, res) => {
     const data = req.params
     if(data?.id && data.id != null) {
-        const result = await X.destroy({
+        const result = await Tt.destroy({
             where: {
                 id: data.id
             }
@@ -259,9 +259,9 @@ const destroy = asyncHnadler( async (req, res) => {
 })
 
 // @desc POST refresh all accounts
-// @route POST /X/refresh
+// @route POST /tt/refresh
 // @access Private
-const refresh = asyncHnadler( async (req, res) => {
+const refreshTt = asyncHnadler( async (req, res) => {
 
     const data = req.params
     const io = global.io // Access io as a global variable
@@ -269,15 +269,15 @@ const refresh = asyncHnadler( async (req, res) => {
     // get all accounts
     let x = []
     if(data?.account && data.account != null) {
-        let dumpX = await X.findOne({
+        let dumpInsta = await Tt.findOne({
             where: {
-                account: data.account,
+                uniqueId: data.account,
             },
         })
-        x.push(dumpX)
+        x.push(dumpInsta)
     } else {
         const userId = 1
-        x = await X.findAll({ 
+        x = await Tt.findAll({ 
             where: {
                 userId: userId
             },
@@ -293,43 +293,43 @@ const refresh = asyncHnadler( async (req, res) => {
         
         // get account data
         const follower = x[index]
-        const account = follower.account
-        const userProfile = await SCRAPER.puppeteer.x.getProfile(account)
+        const account = follower.uniqueId
+        const userProfile = await SCRAPER.playwright.tt.getProfile(account)
         console.log(userProfile)
         if(userProfile != null) {
             console.log('prepare for store')
             // update the data
             const profileData = {
-                profile_banner_url: userProfile.profile_banner_url,
-                profile_image_url_https: userProfile.profile_image_url_https,
+                avatar: userProfile.avatar,
             }
 
             console.log('update')
-            const xUpdate = await X.update(profileData, {
+            const ttUpdate = await Tt.update(profileData, {
                 where: { id: follower.id },
             })
-            if(xUpdate) {
+            if(ttUpdate) {
 
                 // store the followers
                 const followerData = {
-                    xId: follower.id,
-                    name: userProfile.name,
+                    ttId: follower.id,
+                    nickname: userProfile.nickname,
                     following: userProfile.followings_count,
                     followers: userProfile.followers_count,
-                    friends: userProfile.favourites_count,
-                    media_count: userProfile.media_count,
-                    statuses_count: userProfile.statuses_count,
+                    friends: userProfile.friends_count,
+                    likes_count: userProfile.likes_count,
+                    media_count: userProfile.video_count,
                     description: userProfile.description,
+                    biolink: userProfile.bioLink,
                 }
 
-                const xDetail = await XDetail.create(followerData)
-                if(xDetail) {
-                    const data = await X.findOne({
+                const ttDetail = await TtDetail.create(followerData)
+                if(ttDetail) {
+                    const data = await Tt.findOne({
                         where: {
                             id: follower.id,
                         },
                         include: {
-                            model: XDetail,
+                            model: TtDetail,
                             order: [['id', 'DESC']], 
                             limit: 1 
                         }
@@ -338,7 +338,7 @@ const refresh = asyncHnadler( async (req, res) => {
                     console.log(data)
         
                     if(x) {
-                        io.emit('refresh-account', { updated: true, data: data})
+                        io.emit('refresh-account-tt', { updated: true, data: data})
                     }
                 } else {
                     success = false
@@ -359,9 +359,9 @@ const refresh = asyncHnadler( async (req, res) => {
 
 
 module.exports = {
-    index,
-    store,
-    detail,
-    destroy,
-    refresh
+    indexTt,
+    storeTt,
+    detailTt,
+    destroyTt,
+    refreshTt
 }

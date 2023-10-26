@@ -6,6 +6,7 @@
 const moment = require('moment')
 const { firefox } = require('playwright')
 const puppeteer = require('puppeteer-extra')
+const imageToBase64 = require("image-to-base64")
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 const asyncHnadler = require('express-async-handler')
 
@@ -27,6 +28,11 @@ const convertToNumber = (str) => {
     const number = parseFloat(cleanedStr);
     
     return isNaN(number) ? null : number;
+}
+
+const getBase64 = async (link) => {
+    const base64 = await imageToBase64(link);
+    return `data:image/jpeg;base64,${base64}`;
 }
 
 const BEAUTIFY = {
@@ -68,7 +74,7 @@ const BEAUTIFY = {
             dumpData.followings_count = data.edge_follow.count
             dumpData.media_count = data.edge_owner_to_timeline_media.count
             dumpData.description = data.biography
-            dumpData.profile_image_url = data.profile_pic_url_hd
+            dumpData.profile_image_url = await getBase64(data.profile_pic_url_hd)
 
             return dumpData
         }
@@ -86,11 +92,11 @@ const BEAUTIFY = {
             dumpData.followers_count = data.stats.followerCount
             dumpData.followings_count = data.stats.followingCount
             dumpData.friends_count = data.stats.friendCount
-            dumpData.heart_count = data.stats.heartCount
+            dumpData.likes_count = data.stats.heartCount
             dumpData.video_count = data.stats.videoCount
-            dumpData.avatar = data.user.avatarLarger
+            dumpData.avatar = await getBase64(data.user.avatarLarger)
             dumpData.description = data.user.signature
-
+            dumpData.bioLink = data.user.bioLink?.link
             return dumpData
 
         }
@@ -311,7 +317,7 @@ const SCRAPER = {
                 
                     try {
                         console.log('go to page')
-                        await page.goto(`https://www.tiktok.com/${account}`, { waitUntil: 'domcontentloaded'})
+                        await page.goto(`https://www.tiktok.com/@${account}`, { waitUntil: 'domcontentloaded'})
                     } catch (error) {
                         resovle(null)
                     }
@@ -500,7 +506,7 @@ const SCRAPER = {
                 
                     try {
                         console.log('go to page')
-                        await pageGlobal.goto(`https://www.tiktok.com/${account}`, { waitUntil: 'domcontentloaded' })
+                        await pageGlobal.goto(`https://www.tiktok.com/@${account}`, { waitUntil: 'domcontentloaded' })
                     } catch (error) {
                         resovle(null)
                     }

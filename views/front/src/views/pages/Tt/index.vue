@@ -3,10 +3,10 @@ import dayjs from "dayjs"
 import { APP } from '@/config.js'
 import { useQuasar } from 'quasar'
 import { ref, onMounted, watchEffect, watch } from 'vue'
-import { useInstaStore } from '@/stores/Insta'
+import { useTtStore } from '@/stores/Tt'
 
 const $q = useQuasar()
-const instaStore = useInstaStore()
+const ttStore = useTtStore()
 
 const filter = ref('')
 const columns = [
@@ -42,7 +42,7 @@ const changePagination = (newPagination) => {
 
 // Fetch store
 onMounted(async () => {
-    rows.value = await instaStore.handleGetAll()
+    rows.value = await ttStore.handleGetAll()
 })
 
 
@@ -54,26 +54,26 @@ function showConfirmDialog(row) {
         persistent: true,
         html: true,
     }).onOk(async () => {
-        await instaStore.handleDestroy(row.id)
-        if (instaStore._success) {
-            rows.value = await instaStore.handleGetAll()
+        await ttStore.handleDestroy(row.id)
+        if (ttStore._success) {
+            rows.value = await ttStore.handleGetAll()
             $q.notify({
                 caption: 'アカウントは正常に削除されました。',
                 message: '成功！',
                 type: 'positive',
                 timeout: 1000
             })
-            instaStore.storeSuccess(false)
+            ttStore.storeSuccess(false)
         }
 
-        if (instaStore._error) {
+        if (ttStore._error) {
             $q.notify({
                 caption: 'エラーが発生しました。後でもう一度お試しください。',
                 message: 'エラー！',
                 type: 'negative',
                 timeout: 1000
             })
-            instaStore.storeError(false)
+            ttStore.storeError(false)
         }
     })
 }
@@ -118,7 +118,7 @@ const refreshAll = async () => {
         })
     }
 
-    await instaStore.handleRefreshAll()
+    await ttStore.handleRefreshAll()
 
     setTimeout( async () => {
 
@@ -128,24 +128,24 @@ const refreshAll = async () => {
                 item.refresh = false;
             })
         }
-        if (instaStore._success) {
+        if (ttStore._success) {
             $q.notify({
                 caption: 'アカウントは正常に削除されました。',
                 message: '成功！',
                 type: 'positive',
                 timeout: 1000
             })
-            instaStore.storeSuccess(false)
+            ttStore.storeSuccess(false)
         }
 
-        if (instaStore._error) {
+        if (ttStore._error) {
             $q.notify({
                 caption: 'エラーが発生しました。後でもう一度お試しください。',
                 message: 'エラー！',
                 type: 'negative',
                 timeout: 1000
             })
-            instaStore.storeError(false)
+            ttStore.storeError(false)
         }
     }, 2000)
 
@@ -154,30 +154,30 @@ const refreshAll = async () => {
 const refreshOne = async (row) => {
     row.refresh = true
     const index = rows.value.findIndex(r => r.id === row.id)
-    await instaStore.handleRefresh(row.account)
+    await ttStore.handleRefresh(row.account)
 
     setTimeout( async () => {
 
         // set table disable
         rows.value[index].refresh = false
-        if (instaStore._success) {
+        if (ttStore._success) {
             $q.notify({
                 caption: 'アカウントは正常に削除されました。',
                 message: '成功！',
                 type: 'positive',
                 timeout: 1000
             })
-            instaStore.storeSuccess(false)
+            ttStore.storeSuccess(false)
         }
 
-        if (instaStore._error) {
+        if (ttStore._error) {
             $q.notify({
                 caption: 'エラーが発生しました。後でもう一度お試しください。',
                 message: 'エラー！',
                 type: 'negative',
                 timeout: 1000
             })
-            instaStore.storeError(false)
+            ttStore.storeError(false)
         }
     }, 2000)
 
@@ -185,7 +185,7 @@ const refreshOne = async (row) => {
 
 // watch the refresh
 watch(
-    () => instaStore._insta,
+    () => ttStore._tt,
     (newValue, oldValue) => {
         if(newValue != null) {
             const updatedFollower = newValue
@@ -205,13 +205,13 @@ watch(
 // watch the loading
 watchEffect(() => {
     // set area rows
-    if (instaStore._loading) {
+    if (ttStore._loading) {
         $q.loading.show()
     } else {
         $q.loading.hide()
     }
 
-}, [instaStore._loading])
+}, [ttStore._loading])
 
 </script>
 <template>
@@ -238,7 +238,7 @@ watchEffect(() => {
                             <div class="row">
                                 <q-btn class="shadow-3 p-common-btn q-mr-md" icon="mdi-refresh" @click="refreshAll"
                                     no-caps />
-                                <q-btn class="shadow-3 p-common-btn" label="新規作成" :to="{ name: 'insta.create' }"
+                                <q-btn class="shadow-3 p-common-btn" label="新規作成" :to="{ name: 'tt.create' }"
                                     no-caps />
                             </div>
                         </q-card-section>
@@ -274,7 +274,7 @@ watchEffect(() => {
                                 <template v-slot:body-cell-account="props">
                                     <q-td>
                                         <div :class="props.row.refresh == true ? 'loading-opacity':''">
-                                            <a :href="'https://instagram.com/'+props.row.account" target="_blank">@{{ props.row.account }}</a>
+                                            <a :href="'https://tiktok.com/@'+props.row.account" target="_blank">@{{ props.row.account }}</a>
                                         </div>
                                     </q-td>
                                 </template>
@@ -334,7 +334,7 @@ watchEffect(() => {
                                                 </div>
                                                 <div>
                                                     <router-link
-                                                        :to="{ name: 'insta.detail', params: { id: APP.encryptID(props.row.id) } }">
+                                                        :to="{ name: 'tt.detail', params: { id: APP.encryptID(props.row.id) } }">
                                                         <q-btn size="sm" padding="sm" round class="p-common-bg" :disable="props.row.refresh == false ? false:true"
                                                             icon="mdi-note-edit-outline" />
                                                     </router-link>

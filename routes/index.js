@@ -10,7 +10,9 @@ const multer = require('multer')
  * Required Internal Modules
  */
 const { index, store, detail, destroy, refresh } = require('../controllers/x.controller')
-const { indexInsta, storeInsta, detailInsta } = require('../controllers/insta.controller')
+const { indexInsta, storeInsta, detailInsta, destroyInsta, refreshInsta } = require('../controllers/insta.controller')
+const { indexTt, storeTt, detailTt, destroyTt, refreshTt } = require('../controllers/tt.controller')
+
 const { checkAuth, signIn, signout } = require('../controllers/auth.controller')
 const { requireAuth } = require('../middleware/auth.middleware')
 
@@ -38,5 +40,15 @@ router.post('/x/refresh/:account', requireAuth, refresh)
 router.get('/insta', requireAuth, indexInsta)
 router.post('/insta/store', upload.single('file'), requireAuth, storeInsta)
 router.get('/insta/:id/detail', requireAuth, detailInsta)
+router.delete('/insta/:id/destroy', requireAuth, destroyInsta)
+router.post('/insta/refresh-all', requireAuth, refreshInsta)
+router.post('/insta/refresh/:account', requireAuth, refreshInsta)
+
+router.get('/tt', requireAuth, indexTt)
+router.post('/tt/store', upload.single('file'), requireAuth, storeTt)
+router.get('/tt/:id/detail', requireAuth, detailTt)
+router.delete('/tt/:id/destroy', requireAuth, destroyTt)
+router.post('/tt/refresh-all', requireAuth, refreshTt)
+router.post('/tt/refresh/:account', requireAuth, refreshTt)
 
 module.exports = router

@@ -7,12 +7,12 @@ import relativeTime from "dayjs/plugin/relativeTime";
 
 import { io } from "socket.io-client";
 
-export const useInstaStore = defineStore("insta", () => {
+export const useTtStore = defineStore("tt", () => {
   const _loading = ref(false);
   const _success = ref(false);
   const _error = ref(false);
-  const _instas = ref(null);
-  const _insta = ref(null);
+  const _tts = ref(null);
+  const _tt = ref(null);
   const _createMessage = ref("データを取得中ですのでお待ちください。");
 
   dayjs.extend(relativeTime);
@@ -41,15 +41,15 @@ export const useInstaStore = defineStore("insta", () => {
     const dumpData = {};
     dumpData.id = data.id;
     dumpData.refresh = -1;
-    dumpData.name = data.insta_details[0].name
-    dumpData.account = data.username
-    dumpData.followers = data.insta_details[0].followers
-    dumpData.following = data.insta_details[0].following
-    dumpData.media = data.insta_details[0].media_count
+    dumpData.name = data.tt_details[0].nickname
+    dumpData.account = data.uniqueId
+    dumpData.followers = data.tt_details[0].followers
+    dumpData.following = data.tt_details[0].following
+    dumpData.media = data.tt_details[0].media_count
     dumpData.last_detection = dayjs(data.updateTimestamp).fromNow()
     dumpData.creation_time = data.updateTimestamp
     dumpData.action = "";
-    _insta.value = dumpData
+    _tt.value = dumpData
   };
 
   const storeRows = (data) => {
@@ -59,11 +59,11 @@ export const useInstaStore = defineStore("insta", () => {
         const dumpData = {};
         dumpData.id = element.id;
         dumpData.refresh = false;
-        dumpData.name = element.insta_details[0].name
-        dumpData.account = element.username
-        dumpData.followers = element.insta_details[0].followers
-        dumpData.following = element.insta_details[0].following
-        dumpData.media = element.insta_details[0].media_count
+        dumpData.name = element.tt_details[0].nickname
+        dumpData.account = element.uniqueId
+        dumpData.followers = element.tt_details[0].followers
+        dumpData.following = element.tt_details[0].following
+        dumpData.media = element.tt_details[0].media_count
         dumpData.last_detection = dayjs(element.updateTimestamp).fromNow()
         dumpData.creation_time = element.updateTimestamp
         dumpData.action = "";
@@ -77,27 +77,33 @@ export const useInstaStore = defineStore("insta", () => {
 
     if(data && data != null) {
 
-      let lastIndexXDetail = data?.insta_details.length - 1
+      let lastIndexXDetail = data?.tt_details.length - 1
       
       const profile = {
-        img: data.profile_image_url,
-        name: data?.insta_details[lastIndexXDetail].name,
-        account: data.username,
-        desc: data?.insta_details[lastIndexXDetail].description,
-        following: data?.insta_details[lastIndexXDetail].following,
-        followers: data?.insta_details[lastIndexXDetail].followers,
-        media: data?.insta_details[lastIndexXDetail].media_count,
+        img: data.avatar,
+        name: data?.tt_details[lastIndexXDetail].nickname,
+        account: data.uniqueId,
+        desc: data?.tt_details[lastIndexXDetail].description,
+        biolink: data?.tt_details[lastIndexXDetail].biolink,
+        following: data?.tt_details[lastIndexXDetail].following,
+        followers: data?.tt_details[lastIndexXDetail].followers,
+        likes: data?.tt_details[lastIndexXDetail].likes_count,
+        friends: data?.tt_details[lastIndexXDetail].friends,
+        media: data?.tt_details[lastIndexXDetail].media_count,
         chart: []
       };
 
 
-      if(data?.insta_details.length > 0) {
+
+      console.log(data?.tt_details)
+
+      if(data?.tt_details.length > 0) {
 
         const latestRecordsByDate = {};
-        for (const record of data.insta_details) {
-          const date = dayjs(record.createTimestamp).format('YYYY-MM-DD'); // Extract the date (year-month-day)
+        for (const record of data.tt_details) {
+          const date = dayjs(record.updateTimestamp).format('YYYY-MM-DD'); // Extract the date (year-month-day)
 
-          if (!latestRecordsByDate[date] || dayjs(latestRecordsByDate[date].createTimestamp).isBefore(record.createTimestamp)) {
+          if (!latestRecordsByDate[date] || dayjs(latestRecordsByDate[date].updateTimestamp).isBefore(record.updateTimestamp)) {
             latestRecordsByDate[date] = record;
           }
         }
@@ -105,7 +111,7 @@ export const useInstaStore = defineStore("insta", () => {
         const latestData = Object.values(latestRecordsByDate);
         latestData.forEach((ele) => {
 
-          const parsedDate = dayjs(ele.createTimestamp)
+          const parsedDate = dayjs(ele.updateTimestamp)
           const dumpEle = {
             year: parsedDate.year(),
             month: parsedDate.format('MM'),
@@ -128,14 +134,14 @@ export const useInstaStore = defineStore("insta", () => {
 
   const handleGetAll = async () => {
     storeLoading(true);
-    const response = await API.insta.getAll();
+    const response = await API.tt.getAll();
     storeLoading(false);
     return storeRows(response);
   };
 
   const handleGet = async (id) => {
     storeLoading(true);
-    const response = await API.insta.get(id);
+    const response = await API.tt.get(id);
     storeLoading(false);
     return storeDetail(response);
   };
@@ -143,11 +149,12 @@ export const useInstaStore = defineStore("insta", () => {
   const handleStore = async (formData) => {
     storeLoading(true);
 
-    socket.on("create-account-insta", (res) => {
+    socket.on("create-account-tt", (res) => {
       _createMessage.value = res.message
     });
 
-    const response = await API.insta.store(formData);
+    const response = await API.tt.store(formData);
+    console.log(response)
     if (response?.success) {
       storeSuccess(true);
     } else {
@@ -158,7 +165,7 @@ export const useInstaStore = defineStore("insta", () => {
 
   const handleDestroy = async (id) => {
     storeLoading(true);
-    const response = await API.insta.destroy(id);
+    const response = await API.tt.destroy(id);
     if (response?.success) {
       storeSuccess(true);
     } else {
@@ -168,7 +175,7 @@ export const useInstaStore = defineStore("insta", () => {
   };
 
   const handleRefreshProcess = () => {
-    socket.on("refresh-account-insta", (res) => {
+    socket.on("refresh-account-tt", (res) => {
       console.log(res)
       if (res?.updated && res.updated && res?.data && res.data != null) {
         storeRow(res.data)
@@ -178,7 +185,7 @@ export const useInstaStore = defineStore("insta", () => {
 
   const handleRefreshAll = async () => {
     // storeLoading(true)
-    const response = await API.insta.refreshAll()
+    const response = await API.tt.refreshAll()
     if (response?.success) {
       storeSuccess(true)
     } else {
@@ -189,7 +196,7 @@ export const useInstaStore = defineStore("insta", () => {
 
   const handleRefresh = async (account) => {
     // storeLoading(true)
-    const response = await API.insta.refresh(account)
+    const response = await API.tt.refresh(account)
     if (response?.success) {
       storeSuccess(true)
     } else {
@@ -199,8 +206,8 @@ export const useInstaStore = defineStore("insta", () => {
   };
 
   return {
-    _instas,
-    _insta,
+    _tts,
+    _tt,
     _success,
     _error,
     _loading,

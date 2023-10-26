@@ -46,7 +46,7 @@ export const API = {
     },
     "followers": {
         "get": async (id) => {
-            const response = await instance.get(apiURL+'/followers/'+id+'/detail', { headers: headers })
+            const response = await instance.get(apiURL+'/x/'+id+'/detail', { headers: headers })
             return response.data
         },
         "getAll": async () => {
@@ -85,6 +85,45 @@ export const API = {
             const response = await instance.post(apiURL+'/insta/store', formData, {headers: headers})
             return response.data
         },
+        "destroy": async (id) => {
+            const response = await instance.delete(apiURL+'/insta/'+id+'/destroy', {headers: headers})
+            return response.data
+        },
+        "refreshAll": async () => {
+            const response = await instance.post(apiURL+'/insta/refresh-all', { headers: headers })
+            return response.data
+        },
+        "refresh": async (account) => {
+            const response = await instance.post(apiURL+'/insta/refresh/'+account, { headers: headers })
+            return response.data
+        },
     },
+    "tt": {
+        "get": async (id) => {
+            const response = await instance.get(apiURL+'/tt/'+id+'/detail', { headers: headers })
+            return response.data
+        },
+        "getAll": async () => {
+            const response = await instance.get(apiURL+'/tt', { headers: headers })
+            return response.data
+        },
+        "store": async (formData) => {
+            headers['Content-Type'] = 'multipart/form-data'
+            const response = await instance.post(apiURL+'/tt/store', formData, {headers: headers})
+            return response.data
+        },
+        "destroy": async (id) => {
+            const response = await instance.delete(apiURL+'/tt/'+id+'/destroy', {headers: headers})
+            return response.data
+        },
+        "refreshAll": async () => {
+            const response = await instance.post(apiURL+'/tt/refresh-all', { headers: headers })
+            return response.data
+        },
+        "refresh": async (account) => {
+            const response = await instance.post(apiURL+'/tt/refresh/'+account, { headers: headers })
+            return response.data
+        },
+    }
 }
 

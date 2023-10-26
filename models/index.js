@@ -43,6 +43,8 @@ db.x = require('./x.model')(sequelize, DataTypes)
 db.xDetail = require('./x_detail.model')(sequelize, DataTypes)
 db.insta = require('./insta.model')(sequelize, DataTypes)
 db.instaDetail = require('./insta_detail.model')(sequelize, DataTypes)
+db.tt = require('./tt.model')(sequelize, DataTypes)
+db.ttDetail = require('./tt_detail.model')(sequelize, DataTypes)
 
 
 db.sequelize.sync({ force: false })
@@ -58,8 +60,8 @@ db.x.belongsTo(db.users) // xes => users
 db.x.hasMany(db.xDetail, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE'
-}) // x_details => xes
-db.xDetail.belongsTo(db.x) // xes => x_details
+}) // xes => x_details
+db.xDetail.belongsTo(db.x) // x_details => xes
 
 db.users.hasMany(db.insta, {
     onDelete: 'CASCADE',
@@ -70,8 +72,20 @@ db.insta.belongsTo(db.users) // insta => users
 db.insta.hasMany(db.instaDetail, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE'
-}) // insta_details => insta
-db.instaDetail.belongsTo(db.insta) // insta => insta_details
+}) // insta => insta_details
+db.instaDetail.belongsTo(db.insta) // insta_details => insta
+
+db.users.hasMany(db.tt, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+}) // users => tt
+db.tt.belongsTo(db.users) // tt => users
+
+db.tt.hasMany(db.ttDetail, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+}) // tt => tt_details
+db.ttDetail.belongsTo(db.tt) // tt_details => tt
 
 
 module.exports = db

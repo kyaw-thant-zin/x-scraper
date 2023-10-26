@@ -4,7 +4,8 @@ import Chart from 'chart.js/auto'
 import { APP } from '@/config.js'
 import { useQuasar } from 'quasar'
 import { ref, computed, onMounted } from 'vue'
-import { useInstaStore } from '@/stores/Insta'
+import { useTtStore } from '@/stores/Tt'
+
 
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
@@ -12,8 +13,8 @@ dayjs.extend(isSameOrBefore)
 dayjs.extend(isSameOrAfter)
 
 const $q = useQuasar()
-const instaStore = useInstaStore()
-const id = computed(() => APP.decryptID(instaStore.router.currentRoute._value.params.id.toString()))
+const ttStore = useTtStore()
+const id = computed(() => APP.decryptID(ttStore.router.currentRoute._value.params.id.toString()))
 
 const getDaysOfCurrentMonth = () => {
   const currentMonth = dayjs().month(); // Get the current month (0-indexed)
@@ -173,7 +174,7 @@ const updateChart = (updateTitle, custom) => {
 
 onMounted( async () => {
     // fetch profile
-    profile.value = await instaStore.handleGet(id.value)
+    profile.value = await ttStore.handleGet(id.value)
     updateChart(chartViewOptionRef.value)
 
     chart = new Chart(
@@ -247,7 +248,7 @@ onMounted( async () => {
                         <q-card>
                             <q-card-section class="row justify-between items-center q-py-md  q-px-lg">
                                 <div class="common-card-ttl">アカウントの詳細</div>
-                                <a :href="'https://instagram.com/'+profile.account" target="_blank" rel="noopener noreferrer">
+                                <a :href="'https://tiktok.com/@'+profile.account" target="_blank" rel="noopener noreferrer">
                                     <q-btn rounded class="shadow-3 p-common-btn" label="訪問" no-caps />
                                 </a>
                             </q-card-section>
@@ -295,6 +296,7 @@ onMounted( async () => {
                                         <div class="text-h6 text-weight-bolder">{{ profile.name }}</div>
                                         <p class="text-caption">@{{ profile.account }}</p>
                                         <p class="text-body2">{{ profile.desc }}</p>
+                                        <p class="text-body2">{{ profile.biolink }}</p>
                                     </div>
                                     <div class="col-12 q-px-md q-mt-lg">
                                         <q-list bordered class="rounded-borders" style="max-width: 350px">
@@ -312,6 +314,22 @@ onMounted( async () => {
                                                 </q-item-section>
             
                                                 <q-item-section side>{{ profile.followers }}</q-item-section>
+                                            </q-item>
+                                            <q-separator spaced />
+                                            <q-item>
+                                                <q-item-section>
+                                                    <q-item-label lines="1">Friends</q-item-label>
+                                                </q-item-section>
+            
+                                                <q-item-section side>{{ profile.friends }}</q-item-section>
+                                            </q-item>
+                                            <q-separator spaced />
+                                            <q-item>
+                                                <q-item-section>
+                                                    <q-item-label lines="1">Likes</q-item-label>
+                                                </q-item-section>
+            
+                                                <q-item-section side>{{ profile.likes }}</q-item-section>
                                             </q-item>
                                             <q-separator spaced />
                                             <q-item>

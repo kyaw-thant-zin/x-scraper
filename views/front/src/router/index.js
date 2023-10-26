@@ -11,6 +11,10 @@ import InstaIndex from "@/views/pages/Insta/index.vue";
 import InstaCreate from "@/views/pages/Insta/create.vue";
 import InstaDetail from "@/views/pages/Insta/detail.vue";
 
+import TtIndex from "@/views/pages/Tt/index.vue";
+import TtCreate from "@/views/pages/Tt/create.vue";
+import TtDetail from "@/views/pages/Tt/detail.vue";
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -76,6 +80,30 @@ const router = createRouter({
           path: ":id/detail",
           name: "insta.detail",
           component: InstaDetail,
+          meta: { requiresAuth: true, authLayout: true },
+        },
+      ],
+    },
+    {
+      path: "/tt",
+      name: "tt",
+      children: [
+        {
+          path: "",
+          name: "tt.index",
+          component: TtIndex,
+          meta: { requiresAuth: true, authLayout: true },
+        },
+        {
+          path: "create",
+          name: "tt.create",
+          component: TtCreate,
+          meta: { requiresAuth: true, authLayout: true },
+        },
+        {
+          path: ":id/detail",
+          name: "tt.detail",
+          component: TtDetail,
           meta: { requiresAuth: true, authLayout: true },
         },
       ],
