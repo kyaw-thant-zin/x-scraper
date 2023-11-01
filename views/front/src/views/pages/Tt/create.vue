@@ -15,6 +15,7 @@ const formData = ref({
 
 const resetForm = () => {
   formData.value.account = ''
+  formData.value.file = null
 }
 
 

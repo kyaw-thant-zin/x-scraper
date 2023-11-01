@@ -1,15 +1,15 @@
 <script setup>
 import { useQuasar } from 'quasar'
 import { ref, watchEffect } from 'vue'
-import { useXStore } from '@/stores/X'
+import { useYtStore } from '@/stores/Yt'
 
 const $q = useQuasar()
-const followerStore = useXStore()
+const ytStore = useYtStore()
 
 const tab = ref('account')
 const formData = ref({
   account: '',
-  userId: 1,
+  userId: 1, 
   file: null
 })
 
@@ -21,54 +21,59 @@ const resetForm = () => {
 
 // create new area
 const onSubmit = async () => {
-  await followerStore.handleStore(formData.value)
 
-  if (followerStore._success) {
-    if(!followerStore._unique) {
-      $q.notify({
-        caption: 'アカウントが正常に作成されました。',
-        message: '成功！',
-        type: 'positive',
-        timeout: 1000
-      })
-      followerStore.storeSuccess(false)
-      resetForm()
-      followerStore.router.replace({ name: 'x.index' })
-    } else {
-      $q.notify({
-        caption: 'この名前ですでに存在します。',
+
+    // remove @
+    formData.value.account = formData.value.account.replace(/[@\s]/g, '')
+
+    await ytStore.handleStore(formData.value)
+
+    if (ytStore._success) {
+        if(!ytStore._unique) {
+        $q.notify({
+            caption: 'アカウントが正常に作成されました。',
+            message: '成功！',
+            type: 'positive',
+            timeout: 1000
+        })
+        ytStore.storeSuccess(false)
+        resetForm()
+        ytStore.router.replace({ name: 'tt.index' })
+        } else {
+        $q.notify({
+            caption: 'この名前ですでに存在します。',
+            message: 'エラー！',
+            type: 'negative',
+            timeout: 1000
+        })
+        ytStore.storeError(false)
+        }
+    }
+
+    if (ytStore._error) {
+        $q.notify({
+        caption: 'エラーが発生しました。後でもう一度お試しください。',
         message: 'エラー！',
         type: 'negative',
         timeout: 1000
-      })
-      followerStore.storeError(false)
+        })
+        ytStore.storeError(false)
     }
-  }
-
-  if (followerStore._error) {
-    $q.notify({
-      caption: 'エラーが発生しました。後でもう一度お試しください。',
-      message: 'エラー！',
-      type: 'negative',
-      timeout: 1000
-    })
-    followerStore.storeError(false)
-  }
 
 }
 
 // watch the loading
 watchEffect(() => {
   // set area rows
-  if (followerStore._loading) {
+  if (ytStore._loading) {
     $q.loading.show({
-      message: followerStore._createMessage
+      message: ytStore._createMessage
     })
   } else {
     $q.loading.hide()
   }
 
-}, [followerStore._loading, followerStore._createMessage])
+}, [ytStore._loading, ytStore._createMessage])
 
 </script>
 <template>

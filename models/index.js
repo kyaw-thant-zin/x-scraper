@@ -45,6 +45,8 @@ db.insta = require('./insta.model')(sequelize, DataTypes)
 db.instaDetail = require('./insta_detail.model')(sequelize, DataTypes)
 db.tt = require('./tt.model')(sequelize, DataTypes)
 db.ttDetail = require('./tt_detail.model')(sequelize, DataTypes)
+db.yt = require('./yt.model')(sequelize, DataTypes)
+db.ytDetail = require('./yt_detail.model')(sequelize, DataTypes)
 
 
 db.sequelize.sync({ force: false })
@@ -86,6 +88,18 @@ db.tt.hasMany(db.ttDetail, {
     onUpdate: 'CASCADE'
 }) // tt => tt_details
 db.ttDetail.belongsTo(db.tt) // tt_details => tt
+
+db.users.hasMany(db.yt, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+}) // users => yt
+db.yt.belongsTo(db.users) // yt => users
+
+db.yt.hasMany(db.ytDetail, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+}) // yt => yt_details
+db.ytDetail.belongsTo(db.yt) // yt_details => yt
 
 
 module.exports = db

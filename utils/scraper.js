@@ -100,6 +100,26 @@ const BEAUTIFY = {
             return dumpData
 
         }
+    },
+    "yt": {
+        "profile": async (data) => {
+            if(data == null) {
+                return null
+            }
+
+            const dumpData = {}
+            dumpData.avatar = data.avatar
+            dumpData.banner = data.banner
+            dumpData.desc = data.desc
+            dumpData.joined = data.joined
+            dumpData.link = data.link
+            dumpData.subscribers = Number(data.subscribers.replace(',', '').replace(' subscribers', ''))
+            dumpData.title = data.title
+            dumpData.videos = Number(data.videos.replace(',', ''))
+            dumpData.views = Number(data.views.replace(',', '').replace(' views', ''))
+
+            return dumpData
+        }
     }
 }
 
@@ -342,6 +362,94 @@ const SCRAPER = {
                     }
                 })
             }
+        },
+        "yt": {
+            "getProfile": async (account) => {
+                return new Promise(async (resovle, reject) => {
+                    console.log(account)
+                    const browserGlobal = await puppeteer.launch({ 
+                        headless: false,
+                        defaultViewport: { width: 1366, height: 768 },
+                        args: [
+                            '--disable-dev-shm-usage', // Disable shared memory usage
+                            '--no-sandbox', // Disable sandboxing for Linux
+                            '--disable-gpu',
+                            '--disable-features=site-per-process'
+                        ],
+                        ignoreHTTPSErrors: true
+                    })
+                    const page = await browserGlobal.newPage()
+
+                    let userProfile = null
+                
+                    try {
+                        console.log('go to page')
+                        await page.goto(`https://www.youtube.com/@${account}/about`, { waitUntil: 'domcontentloaded' })
+                    } catch (error) {
+                        resovle(null)
+                    }
+    
+                    // Extract the content of the script tag and evaluate it
+                    userProfile = await page.evaluate(() => {
+                        // Use a regular expression to extract the variable assignment
+                        const scriptText = Array.from(document.querySelectorAll('script'))
+                        .find(script => /var ytInitialData = \{/.test(script.textContent))?.textContent;
+
+                        if (scriptText) {
+                            // remove var ytInitialData = and ;
+                            const jsonText = scriptText.replace(/^var ytInitialData = |;$/g, '')
+                            const ytInitialData = JSON.parse(jsonText);
+                            // Check if there's a "tabs" array
+                            if (ytInitialData && ytInitialData.header && ytInitialData.contents && ytInitialData.contents.twoColumnBrowseResultsRenderer) {
+
+                                const bYtInitialData = {
+                                    'avatar': ytInitialData.header.c4TabbedHeaderRenderer.avatar.thumbnails[2].url,
+                                    'banner': ytInitialData.header.c4TabbedHeaderRenderer.banner.thumbnails[2].url,
+                                    'title': ytInitialData.header.c4TabbedHeaderRenderer.title,
+                                    'subscribers': ytInitialData.header.c4TabbedHeaderRenderer.subscriberCountText.simpleText,
+                                    'views': null,
+                                    'videos': ytInitialData.header.c4TabbedHeaderRenderer.videosCountText.runs[0].text,
+                                    'desc': ytInitialData.header.c4TabbedHeaderRenderer.tagline.channelTaglineRenderer.content,
+                                    'link': ytInitialData.header.c4TabbedHeaderRenderer?.headerLinks?.channelHeaderLinksViewModel?.firstLink?.content,
+                                    'joined': null
+                                }
+                                const tabs = ytInitialData?.contents?.twoColumnBrowseResultsRenderer?.tabs;
+                        
+                                if(tabs) {
+                                    // Find the element with title 'About'
+                                    const aboutTab = tabs.find(tab => tab.tabRenderer.title === 'About');
+                            
+                                    if (aboutTab) {
+                                        // Access the desired content
+                                        const content = aboutTab?.tabRenderer?.content?.sectionListRenderer?.contents[0]?.itemSectionRenderer?.contents[0]?.channelAboutFullMetadataRenderer;
+                                        if(content) {
+                                            bYtInitialData.views = content?.viewCountText?.simpleText
+                                            bYtInitialData.joined = content?.joinedDateText?.runs[1]?.text
+                                        }
+                                    }
+                                }
+
+                                return bYtInitialData
+                            }
+
+                            return ytInitialData;
+                        }
+
+                        return null; // Return null if the script wasn't found or the assignment was invalid.
+                    });
+
+                    await browserGlobal.close()
+
+                    // beautify data
+                    if(userProfile != null) {
+                        console.log('all done')
+                        const data = BEAUTIFY.yt.profile(userProfile)
+                        resovle(data)
+                    } else {
+                        resovle(userProfile)
+                    }
+                })
+            }
         }
     },
     "playwright": {
@@ -525,6 +633,85 @@ const SCRAPER = {
                     if(userProfile != null) {
                         console.log('all done')
                         const data = BEAUTIFY.tt.profile(userProfile)
+                        resovle(data)
+                    } else {
+                        resovle(userProfile)
+                    }
+                })
+            }
+        },
+        "yt": {
+            "getProfile": async (account) => {
+                return new Promise(async (resovle, reject) => {
+                    console.log(account)
+                    const browserGlobal = await firefox.launch(config.projects.find(project => project.name === 'Desktop Firefox').use)
+                    const contextGlobal = await browserGlobal.newContext()
+                    const pageGlobal = await contextGlobal.newPage()
+
+                    let userProfile = null
+                
+                    try {
+                        console.log('go to page')
+                        await pageGlobal.goto(`https://www.youtube.com/@${account}/about`, { waitUntil: 'domcontentloaded' })
+                    } catch (error) {
+                        resovle(null)
+                    }
+    
+                    // Extract the content of the script tag and evaluate it
+                    userProfile = await pageGlobal.evaluate(() => {
+                        // Use a regular expression to extract the variable assignment
+                        const scriptText = Array.from(document.querySelectorAll('script'))
+                        .find(script => /var ytInitialData = \{/.test(script.textContent))?.textContent;
+
+                        if (scriptText) {
+                            // remove var ytInitialData = and ;
+                            const jsonText = scriptText.replace(/^var ytInitialData = |;$/g, '')
+                            const ytInitialData = JSON.parse(jsonText);
+                            // Check if there's a "tabs" array
+                            if (ytInitialData && ytInitialData.header && ytInitialData.contents && ytInitialData.contents.twoColumnBrowseResultsRenderer) {
+
+                                const bYtInitialData = {
+                                    'avatar': ytInitialData.header.c4TabbedHeaderRenderer.avatar.thumbnails[2].url,
+                                    'banner': ytInitialData.header.c4TabbedHeaderRenderer.banner.thumbnails[2].url,
+                                    'title': ytInitialData.header.c4TabbedHeaderRenderer.title,
+                                    'subscribers': ytInitialData.header.c4TabbedHeaderRenderer.subscriberCountText.simpleText,
+                                    'views': null,
+                                    'videos': ytInitialData.header.c4TabbedHeaderRenderer.videosCountText.runs[0].text,
+                                    'desc': ytInitialData.header.c4TabbedHeaderRenderer.tagline.channelTaglineRenderer.content,
+                                    'link': ytInitialData.header.c4TabbedHeaderRenderer?.headerLinks?.channelHeaderLinksViewModel?.firstLink?.content,
+                                    'joined': null
+                                }
+                                const tabs = ytInitialData?.contents?.twoColumnBrowseResultsRenderer?.tabs;
+                        
+                                if(tabs) {
+                                    // Find the element with title 'About'
+                                    const aboutTab = tabs.find(tab => tab.tabRenderer.title === 'About');
+                            
+                                    if (aboutTab) {
+                                        // Access the desired content
+                                        const content = aboutTab?.tabRenderer?.content?.sectionListRenderer?.contents[0]?.itemSectionRenderer?.contents[0]?.channelAboutFullMetadataRenderer;
+                                        if(content) {
+                                            bYtInitialData.views = content?.viewCountText?.simpleText
+                                            bYtInitialData.joined = content?.joinedDateText?.runs[1]?.text
+                                        }
+                                    }
+                                }
+
+                                return bYtInitialData
+                            }
+
+                            return ytInitialData;
+                        }
+
+                        return null; // Return null if the script wasn't found or the assignment was invalid.
+                    });
+
+                    await browserGlobal.close()
+
+                    // beautify data
+                    if(userProfile != null) {
+                        console.log('all done')
+                        const data = BEAUTIFY.yt.profile(userProfile)
                         resovle(data)
                     } else {
                         resovle(userProfile)

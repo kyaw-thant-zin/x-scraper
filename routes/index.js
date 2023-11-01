@@ -12,6 +12,7 @@ const multer = require('multer')
 const { index, store, detail, destroy, refresh } = require('../controllers/x.controller')
 const { indexInsta, storeInsta, detailInsta, destroyInsta, refreshInsta } = require('../controllers/insta.controller')
 const { indexTt, storeTt, detailTt, destroyTt, refreshTt } = require('../controllers/tt.controller')
+const { indexYt, storeYt } = require('../controllers/yt.controller')
 
 const { checkAuth, signIn, signout } = require('../controllers/auth.controller')
 const { requireAuth } = require('../middleware/auth.middleware')
@@ -50,5 +51,8 @@ router.get('/tt/:id/detail', requireAuth, detailTt)
 router.delete('/tt/:id/destroy', requireAuth, destroyTt)
 router.post('/tt/refresh-all', requireAuth, refreshTt)
 router.post('/tt/refresh/:account', requireAuth, refreshTt)
+
+router.get('/yt', requireAuth, indexYt)
+router.post('/yt/store', upload.single('file'), requireAuth, storeYt)
 
 module.exports = router

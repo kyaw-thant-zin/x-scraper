@@ -124,6 +124,33 @@ export const API = {
             const response = await instance.post(apiURL+'/tt/refresh/'+account, { headers: headers })
             return response.data
         },
+    },
+    "yt": {
+        "get": async (id) => {
+            const response = await instance.get(apiURL+'/yt/'+id+'/detail', { headers: headers })
+            return response.data
+        },
+        "getAll": async () => {
+            const response = await instance.get(apiURL+'/yt', { headers: headers })
+            return response.data
+        },
+        "store": async (formData) => {
+            headers['Content-Type'] = 'multipart/form-data'
+            const response = await instance.post(apiURL+'/yt/store', formData, {headers: headers})
+            return response.data
+        },
+        "destroy": async (id) => {
+            const response = await instance.delete(apiURL+'/yt/'+id+'/destroy', {headers: headers})
+            return response.data
+        },
+        "refreshAll": async () => {
+            const response = await instance.post(apiURL+'/yt/refresh-all', { headers: headers })
+            return response.data
+        },
+        "refresh": async (account) => {
+            const response = await instance.post(apiURL+'/yt/refresh/'+account, { headers: headers })
+            return response.data
+        },
     }
 }
 
