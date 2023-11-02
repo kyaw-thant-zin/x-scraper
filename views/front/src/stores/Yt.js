@@ -54,7 +54,6 @@ export const useYtStore = defineStore("yt", () => {
 
   const storeRows = (data) => {
     const beautifyData = []
-    console.log(data)
     if (data && data != null) {
       data.forEach((element) => {
         const dumpData = {};
@@ -74,33 +73,28 @@ export const useYtStore = defineStore("yt", () => {
   };
 
   const storeDetail = (data) => {
-
     if(data && data != null) {
 
-      let lastIndexXDetail = data?.tt_details.length - 1
+      let lastIndexYtDetail = data?.yt_details.length - 1
       
       const profile = {
         img: data.avatar,
-        name: data?.tt_details[lastIndexXDetail].nickname,
-        account: data.uniqueId,
-        desc: data?.tt_details[lastIndexXDetail].description,
-        biolink: data?.tt_details[lastIndexXDetail].biolink,
-        following: data?.tt_details[lastIndexXDetail].following,
-        followers: data?.tt_details[lastIndexXDetail].followers,
-        likes: data?.tt_details[lastIndexXDetail].likes_count,
-        friends: data?.tt_details[lastIndexXDetail].friends,
-        media: data?.tt_details[lastIndexXDetail].media_count,
+        bg: data.banner,
+        title: data?.yt_details[lastIndexYtDetail].title,
+        account: data.account,
+        desc: data?.yt_details[lastIndexYtDetail].description,
+        biolink: data?.yt_details[lastIndexYtDetail].link,
+        subscribers: data?.yt_details[lastIndexYtDetail].subscribers,
+        views: data?.yt_details[lastIndexYtDetail].views,
+        media: data?.yt_details[lastIndexYtDetail].media_count,
+        joined: data.joined,
         chart: []
       };
 
-
-
-      console.log(data?.tt_details)
-
-      if(data?.tt_details.length > 0) {
+      if(data?.yt_details.length > 0) {
 
         const latestRecordsByDate = {};
-        for (const record of data.tt_details) {
+        for (const record of data.yt_details) {
           const date = dayjs(record.updateTimestamp).format('YYYY-MM-DD'); // Extract the date (year-month-day)
 
           if (!latestRecordsByDate[date] || dayjs(latestRecordsByDate[date].updateTimestamp).isBefore(record.updateTimestamp)) {
@@ -118,7 +112,7 @@ export const useYtStore = defineStore("yt", () => {
             dayOfWeek: parsedDate.format('ddd'),
             day: parsedDate.date(),
             date: parsedDate.format('YYYY/MM/DD'),
-            y: ele.followers
+            y: ele.subscribers
           }
 
           profile.chart.push(dumpEle)
@@ -141,7 +135,7 @@ export const useYtStore = defineStore("yt", () => {
 
   const handleGet = async (id) => {
     storeLoading(true);
-    const response = await API.tt.get(id);
+    const response = await API.yt.get(id);
     storeLoading(false);
     return storeDetail(response);
   };
@@ -149,11 +143,11 @@ export const useYtStore = defineStore("yt", () => {
   const handleStore = async (formData) => {
     storeLoading(true);
 
-    socket.on("create-account-tt", (res) => {
+    socket.on("create-account-yt", (res) => {
       _createMessage.value = res.message
     });
 
-    const response = await API.tt.store(formData);
+    const response = await API.yt.store(formData);
     console.log(response)
     if (response?.success) {
       storeSuccess(true);
@@ -165,7 +159,7 @@ export const useYtStore = defineStore("yt", () => {
 
   const handleDestroy = async (id) => {
     storeLoading(true);
-    const response = await API.tt.destroy(id);
+    const response = await API.yt.destroy(id);
     if (response?.success) {
       storeSuccess(true);
     } else {
@@ -175,8 +169,7 @@ export const useYtStore = defineStore("yt", () => {
   };
 
   const handleRefreshProcess = () => {
-    socket.on("refresh-account-tt", (res) => {
-      console.log(res)
+    socket.on("refresh-account-yt", (res) => {
       if (res?.updated && res.updated && res?.data && res.data != null) {
         storeRow(res.data)
       }
@@ -185,7 +178,7 @@ export const useYtStore = defineStore("yt", () => {
 
   const handleRefreshAll = async () => {
     // storeLoading(true)
-    const response = await API.tt.refreshAll()
+    const response = await API.yt.refreshAll()
     if (response?.success) {
       storeSuccess(true)
     } else {
@@ -196,7 +189,7 @@ export const useYtStore = defineStore("yt", () => {
 
   const handleRefresh = async (account) => {
     // storeLoading(true)
-    const response = await API.tt.refresh(account)
+    const response = await API.yt.refresh(account)
     if (response?.success) {
       storeSuccess(true)
     } else {

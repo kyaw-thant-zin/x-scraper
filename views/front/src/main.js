@@ -25,6 +25,9 @@ import '@/assets/scss/style.scss'
 
 
 import { useXStore } from '@/stores/X'
+import { useTtStore } from '@/stores/Tt'
+import { useInstaStore } from '@/stores/Insta'
+import { useYtStore } from '@/stores/Yt'
 
 const pinia = createPinia()
 pinia.use(({ store }) => {
@@ -45,6 +48,9 @@ app.use(Quasar, {
 // app.use(CanvasJSChart)
 
 useXStore().handleRefreshProcess()
+useTtStore().handleRefreshProcess()
+useInstaStore().handleRefreshProcess()
+useYtStore().handleRefreshProcess()
 
 app.mount('#app')
 

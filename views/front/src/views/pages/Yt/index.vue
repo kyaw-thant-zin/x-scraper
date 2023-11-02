@@ -237,7 +237,7 @@ watchEffect(() => {
                             <div class="row">
                                 <q-btn class="shadow-3 p-common-btn q-mr-md" icon="mdi-refresh" @click="refreshAll"
                                     no-caps />
-                                <q-btn class="shadow-3 p-common-btn" label="新規作成" :to="{ name: 'tt.create' }"
+                                <q-btn class="shadow-3 p-common-btn" label="新規作成" :to="{ name: 'yt.create' }"
                                     no-caps />
                             </div>
                         </q-card-section>
@@ -262,7 +262,7 @@ watchEffect(() => {
                                 <template v-slot:body-cell-account="props">
                                     <q-td>
                                         <div :class="props.row.refresh == true ? 'loading-opacity':''">
-                                            <a :href="'https://tiktok.com/@'+props.row.account" target="_blank">@{{ props.row.account }}</a>
+                                            <a :href="'https://www.youtube.com/@'+props.row.account" target="_blank">@{{ props.row.account }}</a>
                                         </div>
                                     </q-td>
                                 </template>
@@ -322,7 +322,7 @@ watchEffect(() => {
                                                 </div>
                                                 <div>
                                                     <router-link
-                                                        :to="{ name: 'tt.detail', params: { id: APP.encryptID(props.row.id) } }">
+                                                        :to="{ name: 'yt.detail', params: { id: APP.encryptID(props.row.id) } }">
                                                         <q-btn size="sm" padding="sm" round class="p-common-bg" :disable="props.row.refresh == false ? false:true"
                                                             icon="mdi-note-edit-outline" />
                                                     </router-link>

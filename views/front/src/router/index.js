@@ -16,6 +16,8 @@ import TtCreate from "@/views/pages/Tt/create.vue";
 import TtDetail from "@/views/pages/Tt/detail.vue";
 
 import YtIndex from "@/views/pages/Yt/index.vue";
+import YtCreate from "@/views/pages/Yt/create.vue";
+import YtDetail from "@/views/pages/Yt/detail.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -122,14 +124,14 @@ const router = createRouter({
         },
         {
           path: "create",
-          name: "tt.create",
-          component: TtCreate,
+          name: "yt.create",
+          component: YtCreate,
           meta: { requiresAuth: true, authLayout: true },
         },
         {
           path: ":id/detail",
-          name: "tt.detail",
-          component: TtDetail,
+          name: "yt.detail",
+          component: YtDetail,
           meta: { requiresAuth: true, authLayout: true },
         },
       ],

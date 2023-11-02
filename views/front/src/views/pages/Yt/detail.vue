@@ -4,7 +4,7 @@ import Chart from 'chart.js/auto'
 import { APP } from '@/config.js'
 import { useQuasar } from 'quasar'
 import { ref, computed, onMounted } from 'vue'
-import { useXStore } from '@/stores/X'
+import { useYtStore } from '@/stores/Yt'
 
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
@@ -12,8 +12,8 @@ dayjs.extend(isSameOrBefore)
 dayjs.extend(isSameOrAfter)
 
 const $q = useQuasar()
-const followerStore = useXStore()
-const id = computed(() => APP.decryptID(followerStore.router.currentRoute._value.params.id.toString()))
+const ytStore = useYtStore()
+const id = computed(() => APP.decryptID(ytStore.router.currentRoute._value.params.id.toString()))
 
 const getDaysOfCurrentMonth = () => {
   const currentMonth = dayjs().month(); // Get the current month (0-indexed)
@@ -176,7 +176,7 @@ const updateChart = (updateTitle, custom) => {
 
 onMounted( async () => {
     // fetch profile
-    profile.value = await followerStore.handleGet(id.value)
+    profile.value = await ytStore.handleGet(id.value)
     updateChart(chartViewOptionRef.value)
 
     chart = new Chart(
@@ -187,7 +187,7 @@ onMounted( async () => {
                 labels: followersDataPoints.value.map(row => row.label),
                 datasets: [
                     {
-                        label: 'フォロワー',
+                        label: '購読者',
                         data: followersDataPoints.value.map(row => row.y),
                         fill: false,
                         borderColor: '#AFAFAF',
@@ -218,7 +218,7 @@ onMounted( async () => {
                     },
                     title: {
                         display: true,
-                        text: 'フォロワーのチャート'
+                        text: '購読者チャート'
                     },
                 }
             },
@@ -250,7 +250,7 @@ onMounted( async () => {
                         <q-card>
                             <q-card-section class="row justify-between items-center q-py-md  q-px-lg">
                                 <div class="common-card-ttl">アカウントの詳細</div>
-                                <a :href="'https://twitter.com/'+profile.account" target="_blank" rel="noopener noreferrer">
+                                <a :href="'https://youtube.com/@'+profile.account" target="_blank" rel="noopener noreferrer">
                                     <q-btn rounded class="shadow-3 p-common-btn" label="訪問" no-caps />
                                 </a>
                             </q-card-section>
@@ -297,34 +297,27 @@ onMounted( async () => {
                                         </q-img>
                                     </div>
                                     <div class="col-12 q-px-md profile-text">
-                                        <div class="text-h6 text-weight-bolder">{{ profile.name }}</div>
+                                        <div class="text-h6 text-weight-bolder">{{ profile.title }}</div>
                                         <p class="text-caption">@{{ profile.account }}</p>
                                         <p class="text-body2">{{ profile.desc }}</p>
+                                        <a :href="APP.convertToURL(profile.biolink)" target="_blank" rel="noopener noreferrer">{{ profile.biolink }}</a>
                                     </div>
                                     <div class="col-12 q-px-md q-mt-lg">
                                         <q-list bordered class="rounded-borders" style="max-width: 350px">
                                             <q-item>
                                                 <q-item-section>
-                                                    <q-item-label lines="1">Following</q-item-label>
+                                                    <q-item-label lines="1">Subscribers</q-item-label>
                                                 </q-item-section>
             
-                                                <q-item-section side>{{ profile.following }}</q-item-section>
+                                                <q-item-section side>{{ profile.subscribers }}</q-item-section>
                                             </q-item>
                                             <q-separator spaced />
                                             <q-item>
                                                 <q-item-section>
-                                                    <q-item-label lines="1">Followers</q-item-label>
+                                                    <q-item-label lines="1">Views</q-item-label>
                                                 </q-item-section>
             
-                                                <q-item-section side>{{ profile.followers }}</q-item-section>
-                                            </q-item>
-                                            <q-separator spaced />
-                                            <q-item>
-                                                <q-item-section>
-                                                    <q-item-label lines="1">Friends</q-item-label>
-                                                </q-item-section>
-            
-                                                <q-item-section side>{{ profile.friends }}</q-item-section>
+                                                <q-item-section side>{{ profile.views }}</q-item-section>
                                             </q-item>
                                             <q-separator spaced />
                                             <q-item>
@@ -333,14 +326,6 @@ onMounted( async () => {
                                                 </q-item-section>
             
                                                 <q-item-section side>{{ profile.media }}</q-item-section>
-                                            </q-item>
-                                            <q-separator spaced />
-                                            <q-item>
-                                                <q-item-section>
-                                                    <q-item-label lines="1">Statuses</q-item-label>
-                                                </q-item-section>
-            
-                                                <q-item-section side>{{ profile.statuses }}</q-item-section>
                                             </q-item>
                                             <q-separator spaced />
                                             <q-item>
@@ -360,7 +345,7 @@ onMounted( async () => {
             </div>
         </div>
     </div>
-</template> 
+</template>
 
 <style lang="scss">
 .canvasjs-chart-credit {

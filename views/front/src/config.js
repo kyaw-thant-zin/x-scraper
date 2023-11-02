@@ -36,5 +36,16 @@ export const APP = {
         'LOCAL_URL': LOCAL_URL,
         'SERVER_URL': SERVER_URL,
         'ACTIVE_API_URL': LOCAL_URL,
+    },
+    'convertToURL': (text) => {
+        if(text && text != undefined) {
+            // Check if the text already starts with "http://" or "https://"
+            if (text.startsWith("http://") || text.startsWith("https://")) {
+                return text; // It's already a URL
+            } else {
+                // Assume it's part of a Twitter username and convert it to a full Twitter URL
+                return `https://${text}`;
+            }
+        }
     }
 }

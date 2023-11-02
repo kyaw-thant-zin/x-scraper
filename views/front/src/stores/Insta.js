@@ -169,7 +169,6 @@ export const useInstaStore = defineStore("insta", () => {
 
   const handleRefreshProcess = () => {
     socket.on("refresh-account-insta", (res) => {
-      console.log(res)
       if (res?.updated && res.updated && res?.data && res.data != null) {
         storeRow(res.data)
       }

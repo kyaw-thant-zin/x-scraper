@@ -93,10 +93,6 @@ export const useTtStore = defineStore("tt", () => {
         chart: []
       };
 
-
-
-      console.log(data?.tt_details)
-
       if(data?.tt_details.length > 0) {
 
         const latestRecordsByDate = {};
@@ -176,7 +172,6 @@ export const useTtStore = defineStore("tt", () => {
 
   const handleRefreshProcess = () => {
     socket.on("refresh-account-tt", (res) => {
-      console.log(res)
       if (res?.updated && res.updated && res?.data && res.data != null) {
         storeRow(res.data)
       }

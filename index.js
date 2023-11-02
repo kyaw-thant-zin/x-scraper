@@ -8,17 +8,16 @@ const http = require('http')
 const socketIo = require('socket.io')
 
 
+/**
+ * Required Internal Modules
+ */
+const cronJob = require('./utils/utils.cron')
 const db = require('./models')
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const dotenv = require('dotenv').config({
     path: __dirname + '/.env'
 })
-
-/**
- * Required Internal Modules
- */
-
 
 
 /**
@@ -82,4 +81,5 @@ app.use('/api', require('./routes/index'))
  */
 server.listen(port, () => {
     console.log(`Listening to requests on http://localhost:${port}`)
+    cronJob.start()
 })

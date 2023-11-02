@@ -24,19 +24,19 @@ a {
         object-fit: cover;
         overflow: unset;
         @media screen and (max-width: 758px) {
-            max-width: 500px;
+            // max-width: 500px;
         }
     }
 
     &-img {
-        width: 130px;
+        width: 90px;
         left: 16px;
-        bottom: -60px;
-        @media screen and (max-width: 758px) {
-            width: 60px;
-            bottom: -20px;
-        }
-    }
+        transform: translateY(50%);
+        -webkit-transform: translateY(50%);
+        -moz-transform: translateY(50%);
+        -ms-transform: translateY(50%);
+        -o-transform: translateY(50%);
+}
 
     &-text {
         margin-top: 60px;

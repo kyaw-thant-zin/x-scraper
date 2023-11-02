@@ -85,7 +85,6 @@ const customSort = (rows, sortBy, descending) => {
         return rows.sort((a, b) => {
             const getARealTime = dayjs(a['creation_time'])
             const getBRealTime = dayjs(b['creation_time'])
-            console.log(descending ? getBRealTime - getARealTime : getARealTime - getBRealTime)
             return descending ? getBRealTime - getARealTime : getARealTime - getBRealTime
         })
     } else if(sortBy == 'tt_created_at') {

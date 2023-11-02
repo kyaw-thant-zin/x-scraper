@@ -76,7 +76,7 @@ const scrapeAndStore = async (userId, account) => {
                     title: dumpUserProfile.title,
                     subscribers: dumpUserProfile.subscribers,
                     views: dumpUserProfile.views,
-                    media_count: dumpUserProfile.media_count,
+                    media_count: dumpUserProfile.videos,
                     description: dumpUserProfile.desc,
                     link: dumpUserProfile.link,
                 }
@@ -182,9 +182,9 @@ const storeYt = asyncHnadler( async (req, res) => {
         for(let i = 0; i < dataArray.length; i++) {
 
             // check account unique
-            let x = await Tt.findOne({
+            let x = await Yt.findOne({
                 where: {
-                    uniqueId: dataArray[i],
+                    account: dataArray[i],
                 }
             })
             
@@ -214,7 +214,155 @@ const storeYt = asyncHnadler( async (req, res) => {
 })
 
 
+// @desc GET Yt detail
+// @route GET /yt/:id/detail
+// @access Private
+const detailYt = asyncHnadler( async (req, res) => {
+    const data = req.params
+    if(data?.id && data.id != null) {
+        let yt = await Yt.findOne({
+            where: {
+                id: data.id,
+            },
+            include: {
+                model: YtDetail,
+            }
+        })
+        res.send(yt)
+    } else {
+        res.send(null)
+    }
+
+})
+
+// @desc DELETE Yt destroy
+// @route DELETE /yt/:id/destroy
+// @access Private
+const destroyYt = asyncHnadler( async (req, res) => {
+    const data = req.params
+    if(data?.id && data.id != null) {
+        const result = await Yt.destroy({
+            where: {
+                id: data.id
+            }
+        })
+    
+        if(result) {
+            res.status(201).send({success: true})
+        }else {
+            res.status(400).send({ success: false })
+            throw new Error('Invalid id')
+        }
+    } else {
+        res.status(400).send({ success: false })
+            throw new Error('Invalid id')
+    }
+
+})
+
+// @desc POST refresh all accounts
+// @route POST /yt/refresh
+// @access Private
+const refreshYt = asyncHnadler( async (req, res) => {
+
+    const data = req.params
+    const io = global.io // Access io as a global variable
+
+    // get all accounts
+    let x = []
+    if(data?.account && data.account != null) {
+        let dumpInsta = await Yt.findOne({
+            where: {
+                account: data.account,
+            },
+        })
+        x.push(dumpInsta)
+    } else {
+        const userId = 1
+        x = await Yt.findAll({ 
+            where: {
+                userId: userId
+            },
+            order: [
+                ['id', 'DESC'],
+            ],
+        })
+    }
+
+    let success = true
+
+    for (let index = 0; index < x.length; index++) {
+        
+        // get account data
+        const follower = x[index]
+        const account = follower.account
+        const userProfile = await SCRAPER.playwright.yt.getProfile(account)
+        console.log(userProfile)
+        if(userProfile != null) {
+            console.log('prepare for store')
+            // update the data
+            const profileData = {
+                avatar: userProfile.avatar,
+                banner: userProfile.banner,
+            }
+
+            console.log('update')
+            const ytUpdate = await Yt.update(profileData, {
+                where: { id: follower.id },
+            })
+            if(ytUpdate) {
+
+                // store the followers
+                const followerData = {
+                    ytId: follower.id,
+                    title: userProfile.title,
+                    subscribers: userProfile.subscribers,
+                    views: userProfile.views,
+                    media_count: userProfile.videos,
+                    description: userProfile.desc,
+                    link: userProfile.link,
+                }
+
+                const ytDetail = await YtDetail.create(followerData)
+                if(ytDetail) {
+                    const data = await Yt.findOne({
+                        where: {
+                            id: follower.id,
+                        },
+                        include: {
+                            model: YtDetail,
+                            order: [['id', 'DESC']], 
+                            limit: 1 
+                        }
+                    })
+
+                    console.log(data)
+        
+                    if(data) {
+                        io.emit('refresh-account-yt', { updated: true, data: data})
+                    }
+                } else {
+                    success = false
+                }
+
+            } else {
+                success = false
+            }
+        } else {
+            success = false
+        }
+    }
+
+    console.log('all done')
+    res.status(201).send({success: success})
+
+})
+
+
 module.exports = {
     indexYt,
-    storeYt
+    storeYt,
+    detailYt,
+    refreshYt,
+    destroyYt
 }

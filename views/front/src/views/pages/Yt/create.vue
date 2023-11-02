@@ -38,7 +38,7 @@ const onSubmit = async () => {
         })
         ytStore.storeSuccess(false)
         resetForm()
-        ytStore.router.replace({ name: 'tt.index' })
+        ytStore.router.replace({ name: 'yt.index' })
         } else {
         $q.notify({
             caption: 'この名前ですでに存在します。',

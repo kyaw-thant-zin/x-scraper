@@ -52,9 +52,11 @@ export const useXStore = defineStore("x", () => {
     dumpData.following = data?.x_details[0].following;
     dumpData.media = data?.x_details[0].media_count;
     dumpData.tt_created_at = data.tt_created_at;
-    dumpData.last_detection = dayjs(data.updateTimestamp).fromNow();
+    dumpData.last_detection = dayjs(data.updateTimestamp).fromNow()
+    dumpData.creation_time = data.updateTimestamp
     dumpData.action = "";
     _follower.value = dumpData
+    console.log(dumpData)
   };
 
   const storeRows = (data) => {
@@ -73,7 +75,7 @@ export const useXStore = defineStore("x", () => {
         dumpData.last_detection = dayjs(element.updateTimestamp).fromNow();
         dumpData.creation_time = element.updateTimestamp
         dumpData.action = "";
-        beautifyData.push(dumpData);
+        beautifyData.push(dumpData); 
       });
     }
     return beautifyData;
