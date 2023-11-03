@@ -135,7 +135,9 @@ const SCRAPER = {
         "x": {
             "getProfile": async (account) => {
                 return new Promise(async (resovle, reject) => {
-                    io.emit('create-account', { message: "「"+account+"」: ページを開いている...." })
+                    if(io) {
+                        io.emit('create-account', { message: "「"+account+"」: ページを開いている...." })
+                    }
                     console.log(account)
     
                     const browserGlobal = await puppeteer.launch({ 
@@ -151,7 +153,9 @@ const SCRAPER = {
                     })
                     const page = await browserGlobal.newPage()
     
-                    io.emit('create-account', { message: "「"+account+"」: ページを開いている...." })
+                    if(io) {
+                        io.emit('create-account', { message: "「"+account+"」: ページを開いている...." })
+                    }
                 
                     await page.setRequestInterception(true)
                 
@@ -164,18 +168,24 @@ const SCRAPER = {
                 
                     page.on('response', async (response) => {
                         const url = response.url();
-                        io.emit('create-account', { message: "「"+account+"」: リクエストを処理する...." })
+                        if(io) {
+                            io.emit('create-account', { message: "「"+account+"」: リクエストを処理する...." })
+                        }
                         // Check if the URL matches the desired pattern
                         if (url.includes('/UserByScreenName')) {
                         
                             // Check the response status
                             if (response.ok()) {
-                                io.emit('create-account', { message: "「"+account+"」: プロフィールリクエストを受信しました...." })
+                                if(io) {
+                                    io.emit('create-account', { message: "「"+account+"」: プロフィールリクエストを受信しました...." })
+                                }
                                 try {
                                     const data = await response.json()
                                     if(data?.data?.user?.result?.legacy) {
                                         console.log('got data')
-                                        io.emit('create-account', { message: "「"+account+"」: プロフィールデータを取得しました...." })
+                                        if(io) {
+                                            io.emit('create-account', { message: "「"+account+"」: プロフィールデータを取得しました...." })
+                                        }
                                         userProfile = data?.data?.user?.result?.legacy
                                     }
                                     // Process the response data as needed
@@ -189,7 +199,9 @@ const SCRAPER = {
                     });
                 
                     try {
-                        io.emit('create-account', { message: "「"+account+"」: プロフィールページに行く...." })
+                        if(io) {
+                            io.emit('create-account', { message: "「"+account+"」: プロフィールページに行く...." })
+                        }
                         await page.goto(`https://twitter.com/${account}`, { waitUntil: 'domcontentloaded'})
                     } catch (error) {
                         resovle(null)
@@ -223,6 +235,9 @@ const SCRAPER = {
             "getProfile": async (account) => {
                 return new Promise(async (resovle, reject) => {
                     console.log(account)
+                    if(io) {
+                        io.emit('create-account-insta', { message: "「"+account+"」: ページを開いている...." })
+                    }
                     const browserGlobal = await puppeteer.launch({ 
                         headless: false,
                         defaultViewport: { width: 1366, height: 768 },
@@ -236,6 +251,11 @@ const SCRAPER = {
                     })
                     const page = await browserGlobal.newPage()
                     await page.setRequestInterception(true)
+
+                    if(io) {
+                        io.emit('create-account-insta', { message: "「"+account+"」: ページを開いている...." })
+                    }
+
                     page.on('request', request => {
                         const url = request.url()
                         request.continue()
@@ -244,11 +264,17 @@ const SCRAPER = {
                     let userProfile = null
                     page.on('response', async (response) => {
                         const url = response.url();
+                        if(io) {
+                            io.emit('create-account-insta', { message: "「"+account+"」: リクエストを処理する...." })
+                        }
                         // Check if the URL matches the desired pattern
                         if (url.includes('https://www.instagram.com/api/v1/users/web_profile_info/?username')) {
                         
                             // Check the response status
                             if (response.ok()) {
+                                if(io) {
+                                    io.emit('create-account-insta', { message: "「"+account+"」: プロフィールリクエストを受信しました...." })
+                                }
                                 try {
                                     const res = await response.json()
                                     if(res?.data?.user) {
@@ -264,7 +290,9 @@ const SCRAPER = {
                     });
                 
                     try {
-                        console.log('go to page')
+                        if(io) {
+                            io.emit('create-account-insta', { message: "「"+account+"」: プロフィールページに行く...." })
+                        }
                         await page.goto(`https://www.instagram.com/${account}/`, { waitUntil: 'domcontentloaded'})
                     } catch (error) {
                         resovle(null)
@@ -294,6 +322,9 @@ const SCRAPER = {
         "tt": {
             "getProfile": async (account) => {
                 return new Promise(async (resovle, reject) => {
+                    if(io) {
+                        io.emit('create-account-tt', { message: "「"+account+"」: ページを開いている...." })
+                    }
                     console.log(account)
                     const browserGlobal = await puppeteer.launch({ 
                         headless: false,
@@ -308,6 +339,11 @@ const SCRAPER = {
                     })
                     const page = await browserGlobal.newPage()
                     await page.setRequestInterception(true)
+
+                    if(io) {
+                        io.emit('create-account-tt', { message: "「"+account+"」: ページを開いている...." })
+                    }
+
                     page.on('request', request => {
                         const url = request.url()
                         request.continue()
@@ -316,11 +352,17 @@ const SCRAPER = {
                     let userProfile = null
                     page.on('response', async (response) => {
                         const url = response.url();
+                        if(io) {
+                            io.emit('create-account-tt', { message: "「"+account+"」: リクエストを処理する...." })
+                        }
                         // Check if the URL matches the desired pattern
                         if (url.includes('https://www.tiktok.com/api/user/detail')) {
                         
                             // Check the response status
                             if (response.ok()) {
+                                if(io) {
+                                    io.emit('create-account-tt', { message: "「"+account+"」: プロフィールリクエストを受信しました...." })
+                                }
                                 try {
                                     const res = await response.json()
                                     if(res?.userInfo) {
@@ -336,7 +378,9 @@ const SCRAPER = {
                     });
                 
                     try {
-                        console.log('go to page')
+                        if(io) {
+                            io.emit('create-account-tt', { message: "「"+account+"」: プロフィールページに行く...." })
+                        }
                         await page.goto(`https://www.tiktok.com/@${account}`, { waitUntil: 'domcontentloaded'})
                     } catch (error) {
                         resovle(null)
@@ -366,6 +410,9 @@ const SCRAPER = {
         "yt": {
             "getProfile": async (account) => {
                 return new Promise(async (resovle, reject) => {
+                    if(io) {
+                        io.emit('create-account-yt', { message: "「"+account+"」: ページを開いている...." })
+                    }
                     console.log(account)
                     const browserGlobal = await puppeteer.launch({ 
                         headless: false,
@@ -379,11 +426,15 @@ const SCRAPER = {
                         ignoreHTTPSErrors: true
                     })
                     const page = await browserGlobal.newPage()
-
+                    if(io) {
+                        io.emit('create-account-yt', { message: "「"+account+"」: ページを開いている...." })
+                    }
                     let userProfile = null
                 
                     try {
-                        console.log('go to page')
+                        if(io) {
+                            io.emit('create-account-yt', { message: "「"+account+"」: プロフィールページに行く...." })
+                        }
                         await page.goto(`https://www.youtube.com/@${account}/about`, { waitUntil: 'domcontentloaded' })
                     } catch (error) {
                         resovle(null)
@@ -456,7 +507,9 @@ const SCRAPER = {
         "x": {
             "getProfile": async (account) => {
                 return new Promise(async (resovle, reject) => {
-                    io.emit('create-account', { message: "「"+account+"」: ページを開いている...." })
+                    if(io) {
+                        io.emit('create-account', { message: "「"+account+"」: ページを開いている...." })
+                    }
                     console.log(account)
                     const browserGlobal = await firefox.launch(config.projects.find(project => project.name === 'Desktop Firefox').use)
                     const contextGlobal = await browserGlobal.newContext()
@@ -464,7 +517,9 @@ const SCRAPER = {
                     let userProfile = null
                     pageGlobal.on('response', async (response) => {
                         const url = response.url();
-                        io.emit('create-account', { message: "「"+account+"」: リクエストを処理する...." })
+                        if(io) {
+                            io.emit('create-account', { message: "「"+account+"」: リクエストを処理する...." })
+                        }
                         if(url.includes('/UserByScreenName')) {
                             // console.log(url)
                         }
@@ -473,11 +528,15 @@ const SCRAPER = {
                         if ( url.includes('/UserByScreenName')) {
                             // Check the response status
                             if (response.ok()) {
-                                io.emit('create-account', { message: "「"+account+"」: プロフィールリクエストを受信しました...." })
+                                if(io) {
+                                    io.emit('create-account', { message: "「"+account+"」: プロフィールリクエストを受信しました...." })
+                                }
                                 try {
                                     const data = await response.json()
                                     if(data?.data?.user?.result?.legacy) {
-                                        io.emit('create-account', { message: "「"+account+"」: プロフィールデータを取得しました...." })
+                                        if(io) {
+                                            io.emit('create-account', { message: "「"+account+"」: プロフィールデータを取得しました...." })
+                                        }
                                         userProfile = data?.data?.user?.result?.legacy
                                         console.log('got data : ')
                                         console.log(userProfile)
@@ -492,7 +551,10 @@ const SCRAPER = {
                         }
                     });
                     
-                    io.emit('create-account', { message: "「"+account+"」: プロフィールページに行く...." })
+                    if(io) {
+                        io.emit('create-account', { message: "「"+account+"」: プロフィールページに行く...." })
+                    }
+
                     try {
                         console.log('go to page')
                         await pageGlobal.goto('https://twitter.com/'+account, { waitUntil: 'domcontentloaded' });
@@ -527,22 +589,38 @@ const SCRAPER = {
         "insta": {
             "getProfile": async (account) => {
                 return new Promise(async (resovle, reject) => {
+                    if(io) {
+                        io.emit('create-account-insta', { message: "「"+account+"」: ページを開いている...." })
+                    }
                     console.log(account)
                     const browserGlobal = await firefox.launch(config.projects.find(project => project.name === 'Desktop Firefox').use)
                     const contextGlobal = await browserGlobal.newContext()
                     const pageGlobal = await contextGlobal.newPage()
 
+                    if(io) {
+                        io.emit('create-account-insta', { message: "「"+account+"」: ページを開いている...." })
+                    }
+
                     let userProfile = null
                     pageGlobal.on('response', async (response) => {
                         const url = response.url();
+                        if(io) {
+                            io.emit('create-account-insta', { message: "「"+account+"」: リクエストを処理する...." })
+                        }
                         // Check if the URL matches the desired pattern
                         if (url.includes('https://www.instagram.com/api/v1/users/web_profile_info/?username')) {
                         
                             // Check the response status
                             if (response.ok()) {
+                                if(io) {
+                                    io.emit('create-account-insta', { message: "「"+account+"」: プロフィールリクエストを受信しました...." })
+                                }
                                 try {
                                     const res = await response.json()
                                     if(res?.data?.user) {
+                                        if(io) {
+                                            io.emit('create-account-insta', { message: "「"+account+"」: プロフィールデータを取得しました...." })
+                                        }
                                         userProfile = res.data.user
                                     }
                                 } catch (error) {
@@ -555,7 +633,9 @@ const SCRAPER = {
                     });
 
                     try {
-                        console.log('go to page')
+                        if(io) {
+                            io.emit('create-account-insta', { message: "「"+account+"」: プロフィールページに行く...." })
+                        }
                         await pageGlobal.goto(`https://www.instagram.com/${account}/`, { waitUntil: 'domcontentloaded' });
                     } catch (error) {
                         resovle(null)
@@ -586,21 +666,37 @@ const SCRAPER = {
             "getProfile": async (account) => {
                 return new Promise(async (resovle, reject) => {
                     console.log(account)
+                    if(io) {
+                        io.emit('create-account-tt', { message: "「"+account+"」: ページを開いている...." })
+                    }
                     const browserGlobal = await firefox.launch(config.projects.find(project => project.name === 'Desktop Firefox').use)
                     const contextGlobal = await browserGlobal.newContext()
                     const pageGlobal = await contextGlobal.newPage()
 
+                    if(io) {
+                        io.emit('create-account-tt', { message: "「"+account+"」: ページを開いている...." })
+                    }
+
                     let userProfile = null
                     pageGlobal.on('response', async (response) => {
                         const url = response.url();
+                        if(io) {
+                            io.emit('create-account-tt', { message: "「"+account+"」: リクエストを処理する...." })
+                        }
                         // Check if the URL matches the desired pattern
                         if (url.includes('https://www.tiktok.com/api/user/detail')) {
                         
                             // Check the response status
                             if (response.ok()) {
+                                if(io) {
+                                    io.emit('create-account-tt', { message: "「"+account+"」: プロフィールリクエストを受信しました...." })
+                                }
                                 try {
                                     const res = await response.json()
                                     if(res?.userInfo) {
+                                        if(io) {
+                                            io.emit('create-account-tt', { message: "「"+account+"」: プロフィールデータを取得しました...." })
+                                        }
                                         userProfile = res.userInfo
                                     }
                                 } catch (error) {
@@ -613,7 +709,9 @@ const SCRAPER = {
                     });
                 
                     try {
-                        console.log('go to page')
+                        if(io) {
+                            io.emit('create-account-tt', { message: "「"+account+"」: プロフィールページに行く...." })
+                        }
                         await pageGlobal.goto(`https://www.tiktok.com/@${account}`, { waitUntil: 'domcontentloaded' })
                     } catch (error) {
                         resovle(null)
@@ -644,14 +742,23 @@ const SCRAPER = {
             "getProfile": async (account) => {
                 return new Promise(async (resovle, reject) => {
                     console.log(account)
+                    if(io) {
+                        io.emit('create-account-yt', { message: "「"+account+"」: ページを開いている...." })
+                    }
                     const browserGlobal = await firefox.launch(config.projects.find(project => project.name === 'Desktop Firefox').use)
                     const contextGlobal = await browserGlobal.newContext()
                     const pageGlobal = await contextGlobal.newPage()
 
+                    if(io) {
+                        io.emit('create-account-yt', { message: "「"+account+"」: ページを開いている...." })
+                    }
+
                     let userProfile = null
                 
                     try {
-                        console.log('go to page')
+                        if(io) {
+                            io.emit('create-account-yt', { message: "「"+account+"」: プロフィールページに行く...." })
+                        }
                         await pageGlobal.goto(`https://www.youtube.com/@${account}/about`, { waitUntil: 'domcontentloaded' })
                     } catch (error) {
                         resovle(null)
