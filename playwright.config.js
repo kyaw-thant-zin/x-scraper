@@ -16,5 +16,24 @@ module.exports = {
         headless: false
       },
     },
+    {
+      name: 'Mobile iPhone',
+      use: {
+        ...devices['iPhone 6'],
+        headless: false,
+      },
+    },
+    {
+      name: 'Mobile Android',
+      use: {
+        ...devices['Pixel 2'],
+        headless: false,
+      },
+    },
+    {
+      name: 'Desktop Chrome',
+      use: 'chromium',
+      headless: false,
+    },
   ],
 }

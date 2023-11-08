@@ -9,8 +9,10 @@ import { useTtStore } from '@/stores/Tt'
 
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 dayjs.extend(isSameOrBefore)
 dayjs.extend(isSameOrAfter)
+dayjs.extend(customParseFormat)
 
 const $q = useQuasar()
 const ttStore = useTtStore()
@@ -30,7 +32,7 @@ const getDaysOfCurrentMonth = () => {
 
 const chartInstance = ref(null)
 const chartViewOptionRef = ref('今週')
-const chartViewOptions = [ '今週', '今月', '週ごと', '月ごと' ]
+const chartViewOptions = [ '今週', '毎日', '毎週', '毎月' ]
 const followersDataPoints = ref([])
 let chart = null
 
@@ -109,7 +111,7 @@ const updateChart = (updateTitle, custom) => {
                 })
             }
 
-        } else if(updateTitle == '今月') { // this month
+        } else if(updateTitle == '毎日') { // daily
             const dataInCurrentMonth = profile.value.chart.filter(dateObj => {
                 const date = dayjs(dateObj.date, 'YYYY/MM/DD')
                 return date.isSameOrAfter(startOfMonth) && date.isSameOrBefore(endOfMonth)
@@ -124,7 +126,7 @@ const updateChart = (updateTitle, custom) => {
                     followersDataPoints.value.push(dumpData)
                 })
             }
-        } else if(updateTitle == '週ごと') { // weekly
+        } else if(updateTitle == '毎週') { // weekly
             const weeklyDataPoints = {}
             // Group data by week
             profile.value.chart.forEach(dateObj => {
@@ -132,8 +134,11 @@ const updateChart = (updateTitle, custom) => {
                 const weekStart = date.startOf('week').format('YYYY/MM/DD')
                 
                 if (!weeklyDataPoints[weekStart] || date.isAfter(dayjs(weeklyDataPoints[weekStart].date, 'YYYY/MM/DD'))) {
+                    const firstDayOfMonth = date.startOf('month');
+                    const daysSinceStartOfMonth = date.diff(firstDayOfMonth, 'day');
+                    const weekNumber = Math.floor((daysSinceStartOfMonth + firstDayOfMonth.day()) / 7) + 1
                     weeklyDataPoints[weekStart] = {
-                        label: date.format('MM/DD'),
+                        label: `Week ${weekNumber}/${date.format('MM')}`,
                         y: Number(dateObj.y),
                     }
                 }
@@ -142,8 +147,23 @@ const updateChart = (updateTitle, custom) => {
             const weeksInCurrentMonth = Object.values(weeklyDataPoints)
             followersDataPoints.value = weeksInCurrentMonth
             
-        } else if(updateTitle == '月ごと') { // by month
-
+        } else if(updateTitle == '毎月') { // monthly
+            const monthlyDataPoints = {}
+            // Group data by week
+            profile.value.chart.forEach(dateObj => {
+                const date = dayjs(dateObj.date, 'YYYY/MM/DD')
+                const monthEnd = date.endOf('month').format('YYYY/MM/DD')
+                
+                if (!monthlyDataPoints[monthEnd] || date.isBefore(dayjs(monthlyDataPoints[monthEnd].date, 'YYYY/MM/DD'))) {
+                    monthlyDataPoints[monthEnd] = {
+                        label: date.format('YYYY/MM'),
+                        y: Number(dateObj.y),
+                    }
+                }
+            })
+            // Convert the grouped data to an array
+            const monthsInCurrentMonth = Object.values(monthlyDataPoints)
+            followersDataPoints.value = monthsInCurrentMonth
         }
     } else {
         const startOfCustom = dayjs(dateRangeObj.value.start, 'YYYY/MM/DD')

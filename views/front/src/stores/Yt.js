@@ -147,8 +147,7 @@ export const useYtStore = defineStore("yt", () => {
       _createMessage.value = res.message
     });
 
-    const response = await API.yt.store(formData);
-    console.log(response)
+    const response = await API.yt.store(formData)
     if (response?.success) {
       storeSuccess(true);
     } else {

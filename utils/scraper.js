@@ -113,7 +113,7 @@ const BEAUTIFY = {
             dumpData.desc = data.desc
             dumpData.joined = data.joined
             dumpData.link = data.link
-            dumpData.subscribers = Number(data.subscribers.replace(',', '').replace(' subscribers', ''))
+            dumpData.subscribers = convertToNumber(data.subscribers.replace(' subscribers', ''))
             dumpData.title = data.title
             dumpData.videos = Number(data.videos.replace(',', ''))
             dumpData.views = Number(data.views.replace(',', '').replace(' views', ''))
@@ -127,108 +127,165 @@ const BEAUTIFY = {
 let browserGlobal
 let contextGlobal
 let pageGlobal
+let requestCount = 0
 
 const io = global.io // Access io as a global variable
+
+const dummyPuppetter = {
+    'insta': async () => {
+        return new Promise(async (resovle, reject) => {
+            const browserGlobal = await puppeteer.launch({ 
+                headless: false,
+                defaultViewport: { width: 1366, height: 768 },
+                args: [
+                    '--disable-dev-shm-usage', // Disable shared memory usage
+                    '--no-sandbox', // Disable sandboxing for Linux
+                    '--disable-gpu',
+                    '--disable-features=site-per-process'
+                ],
+                ignoreHTTPSErrors: true
+            })
+            const page = await browserGlobal.newPage()
+        
+            try {
+                await page.goto(`https://www.instagram.com/therock/`, { waitUntil: 'domcontentloaded'})
+                await page.waitForTimeout(2000)
+            } catch (error) {
+                resovle(null)
+            }
+
+            await browserGlobal.close()
+            resovle(null)
+        })
+    }   
+}
+
+const browserPuppeteer = {
+    "x": {
+        "getProfile": async (account) => {
+            return new Promise(async (resovle, reject) => {
+                if(io) {
+                    io.emit('create-account', { message: "「"+account+"」: ページを開いている...." })
+                }
+                console.log(account)
+
+                const browserGlobal = await puppeteer.launch({ 
+                    headless: false,
+                    defaultViewport: { width: 1366, height: 768 },
+                    args: [
+                        '--disable-dev-shm-usage', // Disable shared memory usage
+                        '--no-sandbox', // Disable sandboxing for Linux
+                        '--disable-gpu',
+                        '--disable-features=site-per-process'
+                    ],
+                    ignoreHTTPSErrors: true
+                })
+                const page = await browserGlobal.newPage()
+
+                if(io) {
+                    io.emit('create-account', { message: "「"+account+"」: ページを開いている...." })
+                }
+            
+                await page.setRequestInterception(true)
+            
+                let userProfile = null
+
+                page.on('request', request => {
+                    const url = request.url()
+                    request.continue()
+                });
+            
+                page.on('response', async (response) => {
+                    const url = response.url();
+                    if(io) {
+                        io.emit('create-account', { message: "「"+account+"」: リクエストを処理する...." })
+                    }
+                    // Check if the URL matches the desired pattern
+                    if (url.includes('/UserByScreenName')) {
+                    
+                        // Check the response status
+                        if (response.ok()) {
+                            if(io) {
+                                io.emit('create-account', { message: "「"+account+"」: プロフィールリクエストを受信しました...." })
+                            }
+                            try {
+                                const data = await response.json()
+                                if(data?.data?.user?.result?.legacy) {
+                                    console.log('got data')
+                                    if(io) {
+                                        io.emit('create-account', { message: "「"+account+"」: プロフィールデータを取得しました...." })
+                                    }
+                                    userProfile = data?.data?.user?.result?.legacy
+                                }
+                                // Process the response data as needed
+                            } catch (error) {
+                                console.error('Error parsing response JSON:')
+                            }
+                        } else {
+                            console.error('Response error (status code:', response.status(), ')')
+
+                        }
+                    }
+                });
+            
+                try {
+                    if(io) {
+                        io.emit('create-account', { message: "「"+account+"」: プロフィールページに行く...." })
+                    }
+                    await page.goto(`https://twitter.com/${account}`, { waitUntil: 'domcontentloaded'})
+                } catch (error) {
+                    resovle(null)
+                }
+
+                try {
+                    console.log('wait for response')
+                    await page.waitForResponse(response => response.url().includes('/UserByScreenName'))
+                    await page.waitForTimeout(3000);
+                } catch (error) {
+                    resovle(null)
+                }
+
+                await browserGlobal.close()
+
+                // beautify data
+                if(userProfile != null) {
+                    console.log('All done!-------')
+                    const data = BEAUTIFY.x.profile(userProfile)
+                    console.log(data)
+                    resovle(data)
+                } else {
+
+                    resovle(userProfile)
+                }
+            })
+
+
+        }
+    }
+}
 
 const SCRAPER = {
     "puppeteer": {
         "x": {
             "getProfile": async (account) => {
                 return new Promise(async (resovle, reject) => {
-                    if(io) {
-                        io.emit('create-account', { message: "「"+account+"」: ページを開いている...." })
-                    }
-                    console.log(account)
-    
-                    const browserGlobal = await puppeteer.launch({ 
-                        headless: true,
-                        defaultViewport: { width: 1366, height: 768 },
-                        args: [
-                            '--disable-dev-shm-usage', // Disable shared memory usage
-                            '--no-sandbox', // Disable sandboxing for Linux
-                            '--disable-gpu',
-                            '--disable-features=site-per-process'
-                        ],
-                        ignoreHTTPSErrors: true
-                    })
-                    const page = await browserGlobal.newPage()
-    
-                    if(io) {
-                        io.emit('create-account', { message: "「"+account+"」: ページを開いている...." })
-                    }
-                
-                    await page.setRequestInterception(true)
-                
-                    let userProfile = null
-    
-                    page.on('request', request => {
-                        const url = request.url()
-                        request.continue()
-                    });
-                
-                    page.on('response', async (response) => {
-                        const url = response.url();
-                        if(io) {
-                            io.emit('create-account', { message: "「"+account+"」: リクエストを処理する...." })
-                        }
-                        // Check if the URL matches the desired pattern
-                        if (url.includes('/UserByScreenName')) {
-                        
-                            // Check the response status
-                            if (response.ok()) {
-                                if(io) {
-                                    io.emit('create-account', { message: "「"+account+"」: プロフィールリクエストを受信しました...." })
-                                }
-                                try {
-                                    const data = await response.json()
-                                    if(data?.data?.user?.result?.legacy) {
-                                        console.log('got data')
-                                        if(io) {
-                                            io.emit('create-account', { message: "「"+account+"」: プロフィールデータを取得しました...." })
-                                        }
-                                        userProfile = data?.data?.user?.result?.legacy
-                                    }
-                                    // Process the response data as needed
-                                } catch (error) {
-                                    console.error('Error parsing response JSON:')
-                                }
-                            } else {
-                                console.error('Response error (status code:', response.status(), ')')
-                            }
-                        }
-                    });
-                
-                    try {
-                        if(io) {
-                            io.emit('create-account', { message: "「"+account+"」: プロフィールページに行く...." })
-                        }
-                        await page.goto(`https://twitter.com/${account}`, { waitUntil: 'domcontentloaded'})
-                    } catch (error) {
-                        resovle(null)
-                    }
-    
-                    try {
-                        console.log('wait for response')
-                        await page.waitForResponse(response => response.url().includes('/UserByScreenName'))
-                        await page.waitForTimeout(3000);
-                    } catch (error) {
-                        resovle(null)
-                    }
-    
-                    await browserGlobal.close()
-    
-                    // beautify data
-                    if(userProfile != null) {
-                        console.log('All done!-------')
-                        const data = BEAUTIFY.x.profile(userProfile)
-                        console.log(data)
-                        resovle(data)
+                    requestCount++
+                    console.log(`Request Count: ${requestCount}`)
+                    const res = await browserPuppeteer.x.getProfile(account)
+                    console.log(res)
+                    if(res) {
+                        resovle(res)
                     } else {
-                        resovle(userProfile)
+                        await dummyPuppetter.insta()
+                        const res = await browserPuppeteer.x.getProfile(account)
+                        console.log(res)
+                        if(res) {
+                            resovle(res)
+                        } else {
+                            resovle(null)
+                        }
                     }
                 })
-    
-    
             }
         },
         "insta": {
@@ -239,7 +296,7 @@ const SCRAPER = {
                         io.emit('create-account-insta', { message: "「"+account+"」: ページを開いている...." })
                     }
                     const browserGlobal = await puppeteer.launch({ 
-                        headless: false,
+                        headless: true,
                         defaultViewport: { width: 1366, height: 768 },
                         args: [
                             '--disable-dev-shm-usage', // Disable shared memory usage
@@ -327,7 +384,7 @@ const SCRAPER = {
                     }
                     console.log(account)
                     const browserGlobal = await puppeteer.launch({ 
-                        headless: false,
+                        headless: true,
                         defaultViewport: { width: 1366, height: 768 },
                         args: [
                             '--disable-dev-shm-usage', // Disable shared memory usage
@@ -415,7 +472,7 @@ const SCRAPER = {
                     }
                     console.log(account)
                     const browserGlobal = await puppeteer.launch({ 
-                        headless: false,
+                        headless: true,
                         defaultViewport: { width: 1366, height: 768 },
                         args: [
                             '--disable-dev-shm-usage', // Disable shared memory usage
@@ -483,7 +540,7 @@ const SCRAPER = {
                                 return bYtInitialData
                             }
 
-                            return ytInitialData;
+                            return null;
                         }
 
                         return null; // Return null if the script wasn't found or the assignment was invalid.

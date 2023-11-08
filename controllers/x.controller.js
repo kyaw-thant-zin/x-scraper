@@ -92,10 +92,10 @@ const scrapeAndStore = async (userId, account) => {
                     resovle(false)
                 }
 
-            } else {
-                io.emit('create-account', { message: "スキップされました:「"+account+"」のデータを取得できません" })
-                resovle(false)
-            }
+        } else {
+            io.emit('create-account', { message: "スキップされました:「"+account+"」のデータを取得できません" })
+            resovle(false)
+        }
     })
     
 }

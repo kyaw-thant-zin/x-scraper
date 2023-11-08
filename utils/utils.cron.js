@@ -178,7 +178,7 @@ const refreshYt = async () => {
             const follower = yts[index]
             const account = follower.account
             const userProfile = await SCRAPER.playwright.yt.getProfile(account)
-
+            console.log(userProfile)
             if(userProfile != null) {
 
                 // update the data
@@ -190,6 +190,7 @@ const refreshYt = async () => {
                 const ytUpdate = await Yt.update(profileData, {
                     where: { id: follower.id },
                 })
+                console.log(ytUpdate)
                 if(ytUpdate) {
     
                     // store the followers
@@ -204,6 +205,7 @@ const refreshYt = async () => {
                     }
     
                     const ytDetail = await YtDetail.create(followerData)
+                    console.log(ytDetail)
     
                 } 
             }
@@ -230,7 +232,8 @@ const refreshAll = async () => {
 }
 
 const cronJob = new cron.CronJob(
-    '0 23 * * *', 
+    '0 23 * * *',  /* => 11PM of every day  */
+    // '*/5 * * * *', /* => every 5 minutes  */
     async () => { 
         console.log('Running cron script...');
         try {
